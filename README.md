@@ -71,6 +71,12 @@ public/js/     SPA: app.js (router), state.js (shared cart/session/tracking), pa
 - **Admin**: HMAC-signed stateless session cookie (HttpOnly, SameSite=Strict, 8 h), 5-failure / 15-min lockout shared across instances,
   JSON-only POSTs, CSP + security headers, CSV formula-injection guard.
 
+## Continuous deployment
+
+The Vercel project `cedar-bear-store` is connected to this GitHub repository: every push to `main`
+builds and promotes a production deployment to https://cedar-bear-store.vercel.app automatically
+(GitHub shows a "Vercel" status check on each commit); pushes to other branches create preview deployments.
+
 ## Deploying to Vercel
 
 The repo is Vercel-ready (`vercel.json`, `api/index.js`): `public/` is served from the CDN and every
