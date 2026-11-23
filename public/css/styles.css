@@ -884,285 +884,45 @@ fieldset.field { border: 0; padding: 0; margin: 0; }
   .page-top { padding-top: 14px; }
 }
 
-/* ==== Background, glass surfaces & motion ===================================== */
-/* Fresh morning-lake backdrop, fixed behind every page (fixed layer also works on iOS). */
-body { background: #eaf4ee; }
+/* ==== Background & surfaces ===================================================
+   A calm, static backdrop (no animation): the fresh lake illustration, softened so
+   content stays the focus, with frosted-glass cards and header. */
+body { background: #eef5f0; }
 body::before {
   content: ''; position: fixed; inset: 0; z-index: -2; pointer-events: none;
-  background: url('/images/bg-fresh-lake.svg') center bottom / cover no-repeat;
+  background:
+    linear-gradient(180deg, rgba(250, 248, 241, .35) 0%, rgba(250, 248, 241, .15) 45%, rgba(250, 248, 241, .45) 100%),
+    url('/images/bg-fresh-lake.svg') center bottom / cover no-repeat;
 }
-/* Hero areas show the backdrop itself instead of the old drawn landscape */
+/* Hero areas show the backdrop instead of their own drawn landscape */
 .scene { display: none; }
+.hero, .offer-hero, .cart-hero, .confirm-hero { background: transparent; isolation: auto; }
 .hero::before, .offer-hero::before, .cart-hero::before {
-  background: linear-gradient(90deg, rgba(255, 253, 246, .78) 0%, rgba(255, 253, 246, .55) 40%, rgba(255, 253, 246, 0) 72%);
+  background: linear-gradient(90deg, rgba(255, 253, 246, .82) 0%, rgba(255, 253, 246, .6) 40%, rgba(255, 253, 246, 0) 72%);
 }
 .confirm-hero::before { background: none; }
-.hero, .offer-hero, .cart-hero, .confirm-hero { background: transparent; }
-.offer-teaser { background: rgba(255, 253, 246, .55); }
-.offer-teaser::before { background: linear-gradient(90deg, rgba(255, 253, 246, .9) 0%, rgba(255, 253, 246, .65) 50%, rgba(255, 253, 246, .1) 85%); }
-.cb-art { background: linear-gradient(160deg, #cfeee4, #f5f1dd); }
-.hero-products .stone { background: radial-gradient(ellipse at center, rgba(160, 140, 110, .55) 0%, rgba(190, 175, 150, .35) 50%, rgba(207, 196, 174, 0) 72%); }
-.hero-products .hp { mix-blend-mode: multiply; filter: saturate(1.05); }
-
-/* Frosted-glass cards and header so the scenery shows through softly */
-:root { --card: rgba(255, 253, 248, .9); }
-.panel, .pcard, .feature, .info-card, .kpi, .highlights, .campaign-banner, .fstep, .confirm-card, .how li, .about-p, .chip, .tab, .empty {
-  backdrop-filter: blur(10px) saturate(130%); -webkit-backdrop-filter: blur(10px) saturate(130%);
-}
-#site-header { background: rgba(250, 246, 236, .78); backdrop-filter: saturate(150%) blur(12px); -webkit-backdrop-filter: saturate(150%) blur(12px); }
-.admin-side { background: rgba(250, 246, 236, .7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-.explain { background: rgba(251, 239, 231, .9); }
-.config-note { background: rgba(238, 242, 231, .92); }
-
-/* Ambient light: soft sun glow + floating bokeh (decorative, behind content) */
-.ambient { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
-.ambient .glow { position: absolute; width: 60vmax; height: 60vmax; right: -14vmax; top: -26vmax; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 249, 220, .75) 0%, rgba(255, 249, 220, 0) 62%); animation: glow 12s ease-in-out infinite alternate; }
-.ambient i { position: absolute; bottom: -40px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, .95), rgba(255, 255, 255, .25) 60%, rgba(255, 255, 255, 0) 70%);
-  animation: drift linear infinite; opacity: .0; }
-@keyframes glow { from { transform: translate(0, 0) scale(1); opacity: .75; } to { transform: translate(-5vmax, 3vmax) scale(1.1); opacity: 1; } }
-@keyframes drift { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: .75; } 88% { opacity: .55; } 100% { transform: translate(var(--dx, 40px), -105vh); opacity: 0; } }
-
-/* ---- Page transitions ---------------------------------------------------- */
-/* View Transitions API (Chrome/Edge/Safari): the new page is revealed in an expanding circle from the
-   click point while the old page zooms back and blurs away. Header & top bar stay put. */
-#topbar { view-transition-name: topbar; }
-#site-header { view-transition-name: site-header; }
-.fx-layer { view-transition-name: fx; }
-::view-transition-group(topbar), ::view-transition-group(site-header) { animation: none; }
-::view-transition-old(root) { animation: vtOld .65s cubic-bezier(.5, 0, .3, 1) both; }
-::view-transition-new(root) { animation: vtReveal .75s cubic-bezier(.22, .8, .25, 1) both; mix-blend-mode: normal; }
-::view-transition-group(fx) { animation: none; }
-::view-transition-old(fx) { display: none; }
-::view-transition-new(fx) { animation: none; }
-@keyframes vtOld { to { transform: scale(.94); filter: blur(6px) saturate(.6); opacity: .25; } }
-@keyframes vtReveal {
-  from { clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 40%)); filter: brightness(1.25) saturate(1.2); }
-  60% { filter: brightness(1.06); }
-  to { clip-path: circle(150vmax at var(--vt-x, 50%) var(--vt-y, 40%)); filter: none; }
-}
-
-/* FX layer: light sweep + particle burst (works with or without View Transitions) */
-.fx-layer { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
-.fx-sweep { position: absolute; top: -20%; bottom: -20%; width: 38%; left: -45%;
-  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 252, 230, .55) 45%, rgba(255, 255, 255, .85) 50%, rgba(255, 252, 230, .55) 55%, rgba(255, 255, 255, 0) 100%);
-  transform: skewX(-18deg); animation: sweep .95s .12s cubic-bezier(.4, 0, .2, 1) both; mix-blend-mode: screen; }
-@keyframes sweep { to { left: 120%; } }
-.fx-ring { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, .95);
-  box-shadow: 0 0 22px rgba(255, 240, 190, .9), inset 0 0 12px rgba(160, 220, 190, .8); animation: ring .7s ease-out both; }
-@keyframes ring { to { transform: scale(14); opacity: 0; border-width: .5px; } }
-.fx-p { position: absolute; width: var(--s, 10px); height: var(--s, 10px); margin: calc(var(--s, 10px) / -2) 0 0 calc(var(--s, 10px) / -2);
-  animation: burst var(--t, .9s) cubic-bezier(.15, .7, .3, 1) both; }
-.fx-p.spark { border-radius: 50%; background: radial-gradient(circle, #fffdf0 0%, #ffe7a3 45%, rgba(255, 231, 163, 0) 70%); }
-.fx-p.leaf { border-radius: 0 100% 0 100%; background: linear-gradient(135deg, #8fd0a2, #3f8f5c); }
-.fx-p.petal { border-radius: 60% 0 60% 0; background: linear-gradient(135deg, #ffd9c6, #e8845e); }
-@keyframes burst {
-  0% { transform: translate(0, 0) rotate(0) scale(.4); opacity: 0; }
-  12% { opacity: 1; }
-  100% { transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(1); opacity: 0; }
-}
-
-/* Fallback for browsers without View Transitions: fade/rise in */
-.page-enter { animation: pageIn .6s cubic-bezier(.2, .7, .2, 1) both; }
-.page-leave { animation: pageOut .18s ease-in both; }
-@keyframes pageIn { from { opacity: 0; transform: translateY(18px) scale(.985); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
-@keyframes pageOut { to { opacity: 0; transform: translateY(-8px) scale(.99); } }
-
-/* Content choreography on every page: card groups cascade in */
-.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > *,
-.vt-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > * { animation: rise .65s cubic-bezier(.2, .8, .2, 1) both; }
-:is(.page-enter, .vt-enter) :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(1) { animation-delay: .18s; }
-:is(.page-enter, .vt-enter) :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(2) { animation-delay: .26s; }
-:is(.page-enter, .vt-enter) :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(3) { animation-delay: .34s; }
-:is(.page-enter, .vt-enter) :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(4) { animation-delay: .42s; }
-:is(.page-enter, .vt-enter) :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(n+5) { animation-delay: .5s; }
-@keyframes rise { from { opacity: 0; transform: translateY(26px) scale(.97); } to { opacity: 1; transform: none; } }
-:is(.page-enter, .vt-enter) :is(.hero-copy, .offer-copy, .confirm-card, .shop-head > div, .co-head, .admin-head) > * { animation: slideIn .75s cubic-bezier(.2, .8, .2, 1) both; }
-:is(.page-enter, .vt-enter) :is(.hero-copy, .offer-copy, .confirm-card) > :nth-child(2) { animation-delay: .1s; }
-:is(.page-enter, .vt-enter) :is(.hero-copy, .offer-copy, .confirm-card) > :nth-child(3) { animation-delay: .2s; }
-:is(.page-enter, .vt-enter) :is(.hero-copy, .offer-copy, .confirm-card) > :nth-child(n+4) { animation-delay: .28s; }
-@keyframes slideIn { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
-:is(.page-enter, .vt-enter) .hero-products .hp { animation: bottleIn .9s cubic-bezier(.2, 1.2, .3, 1) both, float 7s 1s ease-in-out infinite; }
-:is(.page-enter, .vt-enter) .hero-products .hp-1 { animation-delay: .12s, 1.4s; }
-:is(.page-enter, .vt-enter) .hero-products .hp-2 { animation-delay: .24s, 1.8s; }
-@keyframes bottleIn { from { opacity: 0; transform: translateY(40px) scale(.85); } to { opacity: 1; transform: none; } }
-.hero-products .hp { animation: float 7s ease-in-out infinite; }
-.hero-products .hp-1 { animation-delay: -2.3s; } .hero-products .hp-2 { animation-delay: -4.6s; }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-.burst { animation: pop .8s .35s cubic-bezier(.2, 1.5, .4, 1) both; }
-@keyframes pop { from { opacity: 0; transform: rotate(-30deg) scale(.3); } to { opacity: 1; transform: rotate(-8deg) scale(1); } }
-.pill-off { animation: pulse 2.6s 1s ease-in-out infinite; }
-@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(204, 106, 69, .45); } 50% { box-shadow: 0 0 0 10px rgba(204, 106, 69, 0); } }
-
-/* Scroll reveal for sections further down */
-.reveal { opacity: 0; transform: translateY(30px) scale(.98); transition: opacity .8s ease, transform .8s cubic-bezier(.2, .8, .2, 1); }
-.reveal.in { opacity: 1; transform: none; }
-
-/* Interactive polish */
-.pcard, .info-card, .kpi, .feature, .bundle-row, .about-p { transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
-.pcard:hover, .feature:hover, .about-p:hover { transform: translateY(-4px); box-shadow: 0 14px 34px rgba(40, 70, 50, .16); }
-.btn { position: relative; overflow: hidden; }
-.btn-primary::after, .btn-terra::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%;
-  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .35), transparent); transform: skewX(-20deg); transition: left .6s ease; }
-.btn-primary:hover::after, .btn-terra:hover::after { left: 130%; }
-.btn-primary:hover, .btn-terra:hover { box-shadow: 0 8px 20px rgba(40, 60, 30, .22); }
-
-/* Reduced motion: keep a gentle, visible transition (fade + soft reveal); no particles, floating or parallax. */
-@media (prefers-reduced-motion: reduce) {
-  .ambient i, .fx-p, .fx-ring, .hero-products .hp, .pill-off { animation: none !important; }
-  .fx-p, .fx-ring, .ambient i { display: none; }
-  ::view-transition-old(root) { animation: vtFade .35s ease both; }
-  ::view-transition-new(root) { animation: vtRevealSoft .5s ease both; }
-  @keyframes vtFade { to { opacity: 0; } }
-  @keyframes vtRevealSoft { from { opacity: 0; clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 40%)); } to { opacity: 1; clip-path: circle(150vmax at var(--vt-x, 50%) var(--vt-y, 40%)); } }
-  :is(.page-enter, .vt-enter) * { animation-duration: .4s !important; }
-  .reveal { transition-duration: .4s; }
-}
-
-/* Let hero bottles blend straight into the fixed backdrop (no isolated group) */
-.hero, .offer-hero, .cart-hero, .confirm-hero { isolation: auto; }
 @media (max-width: 900px) {
   .hero::before, .offer-hero::before, .cart-hero::before {
-    background: linear-gradient(180deg, rgba(255, 253, 246, .82) 0%, rgba(255, 253, 246, .62) 60%, rgba(255, 253, 246, .2) 100%);
+    background: linear-gradient(180deg, rgba(255, 253, 246, .86) 0%, rgba(255, 253, 246, .66) 60%, rgba(255, 253, 246, .25) 100%);
   }
 }
+.offer-teaser { background: rgba(255, 253, 246, .6); }
+.offer-teaser::before { background: linear-gradient(90deg, rgba(255, 253, 246, .92) 0%, rgba(255, 253, 246, .7) 50%, rgba(255, 253, 246, .1) 85%); }
+.cb-art { background: linear-gradient(160deg, #d6efe6, #f5f1e0); }
+/* Product bottles sit naturally on the scenery */
+.hero-products .hp { mix-blend-mode: multiply; }
+.hero-products .stone { background: radial-gradient(ellipse at center, rgba(160, 140, 110, .5) 0%, rgba(190, 175, 150, .3) 50%, rgba(207, 196, 174, 0) 72%); }
 
-/* ==== Light-burst page transition ============================================
-   Click → light blooms from the click point with beams radiating in all directions →
-   old page brightens and dissolves into the light → light recedes → new page emerges.
-   A single soft bloom (no strobing). These rules override the earlier circle reveal. */
-.fx-flash { position: absolute; left: var(--fx-x, 50%); top: var(--fx-y, 40%); width: 300vmax; height: 300vmax; margin: -150vmax 0 0 -150vmax; border-radius: 50%;
-  background: radial-gradient(circle, #ffffff 0%, rgba(255, 253, 240, .98) 22%, rgba(255, 249, 226, .96) 50%, rgba(246, 252, 240, .93) 80%, rgba(255, 255, 255, 0) 100%);
-  animation: lightBloom 1.15s cubic-bezier(.3, .6, .2, 1) both; }
-@keyframes lightBloom { 0% { transform: scale(0); opacity: 1; } 38% { transform: scale(1); opacity: 1; } 55% { opacity: .96; } 100% { transform: scale(1.12); opacity: 0; } }
-.fx-rays { position: absolute; left: var(--fx-x, 50%); top: var(--fx-y, 40%); width: 260vmax; height: 260vmax; margin: -130vmax 0 0 -130vmax; border-radius: 50%;
-  background: repeating-conic-gradient(from 0deg, rgba(255, 244, 200, 0) 0deg 6deg, rgba(255, 246, 210, .85) 8.5deg, rgba(255, 244, 200, 0) 11deg 15deg);
-  -webkit-mask: radial-gradient(circle, #000 0%, #000 22%, rgba(0, 0, 0, .55) 45%, transparent 68%);
-          mask: radial-gradient(circle, #000 0%, #000 22%, rgba(0, 0, 0, .55) 45%, transparent 68%);
-  animation: lightRays 1.25s cubic-bezier(.2, .7, .2, 1) both; }
-@keyframes lightRays { 0% { transform: scale(.05) rotate(0deg); opacity: 0; } 12% { opacity: 1; } 55% { opacity: .9; } 100% { transform: scale(1.2) rotate(28deg); opacity: 0; } }
-.fx-core { position: absolute; left: var(--fx-x, 50%); top: var(--fx-y, 40%); width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%;
-  background: #fff; box-shadow: 0 0 40px 18px rgba(255, 246, 200, .95), 0 0 120px 60px rgba(255, 238, 170, .6);
-  animation: lightCore .7s ease-out both; }
-@keyframes lightCore { 0% { transform: scale(.2); opacity: 0; } 25% { transform: scale(1.4); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
-
-/* View Transitions timing: old page dissolves into the light, new page appears as the light recedes */
-::view-transition-old(root) { animation: dissolveOld .5s cubic-bezier(.4, 0, .6, 1) both; }
-::view-transition-new(root) { animation: emergeNew .75s .42s cubic-bezier(.2, .7, .2, 1) both; mix-blend-mode: normal; }
-@keyframes dissolveOld { to { opacity: 0; transform: scale(1.035); filter: brightness(1.7) saturate(.6) blur(3px); } }
-@keyframes emergeNew { from { opacity: 0; transform: scale(.975); filter: brightness(1.45) blur(5px); } to { opacity: 1; transform: none; filter: none; } }
-/* The light covers the header too; keep it in the same dissolve as the page */
-::view-transition-group(topbar), ::view-transition-group(site-header) { animation: none; }
-::view-transition-old(topbar), ::view-transition-old(site-header) { animation: dissolveOld .5s cubic-bezier(.4, 0, .6, 1) both; }
-::view-transition-new(topbar), ::view-transition-new(site-header) { animation: emergeNew .6s .45s ease-out both; }
-
-/* Content cascade starts once the new page emerges from the light */
-.vt-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(1) { animation-delay: .55s; }
-.vt-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(2) { animation-delay: .63s; }
-.vt-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(3) { animation-delay: .71s; }
-.vt-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(4) { animation-delay: .79s; }
-.vt-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(n+5) { animation-delay: .87s; }
-.vt-enter :is(.hero-copy, .offer-copy, .confirm-card, .shop-head > div, .co-head, .admin-head) > * { animation-delay: .45s; }
-.vt-enter :is(.hero-copy, .offer-copy, .confirm-card) > :nth-child(2) { animation-delay: .55s; }
-.vt-enter :is(.hero-copy, .offer-copy, .confirm-card) > :nth-child(3) { animation-delay: .65s; }
-.vt-enter :is(.hero-copy, .offer-copy, .confirm-card) > :nth-child(n+4) { animation-delay: .72s; }
-.vt-enter .hero-products .hp { animation-delay: .5s, 1.6s; }
-.vt-enter .hero-products .hp-1 { animation-delay: .62s, 2s; }
-.vt-enter .hero-products .hp-2 { animation-delay: .74s, 2.4s; }
-
-/* Fallback (no View Transitions): page dissolves while the light covers it */
-.page-leave { animation: dissolvePage .38s ease-in both; }
-@keyframes dissolvePage { to { opacity: 0; filter: brightness(1.6) blur(3px); transform: scale(1.02); } }
-.page-enter { animation: emergePage .7s .05s cubic-bezier(.2, .7, .2, 1) both; }
-@keyframes emergePage { from { opacity: 0; filter: brightness(1.4) blur(5px); transform: scale(.975); } to { opacity: 1; filter: none; transform: none; } }
-
-/* Reduced motion: the light still blooms and the pages cross-fade, but nothing spins, scales or flies */
-@media (prefers-reduced-motion: reduce) {
-  .fx-rays, .fx-core { display: none; }
-  .fx-flash { animation: lightBloomSoft .9s ease both !important; transform: none; }
-  @keyframes lightBloomSoft { 0% { opacity: 0; } 40% { opacity: .95; } 100% { opacity: 0; } }
-  ::view-transition-old(root), ::view-transition-old(topbar), ::view-transition-old(site-header) { animation: fadeOutSoft .4s ease both !important; }
-  ::view-transition-new(root), ::view-transition-new(topbar), ::view-transition-new(site-header) { animation: fadeInSoft .5s .36s ease both !important; }
-  @keyframes fadeOutSoft { to { opacity: 0; } }
-  @keyframes fadeInSoft { from { opacity: 0; } to { opacity: 1; } }
-  .page-leave { animation: fadeOutSoft .35s ease both; }
-  .page-enter { animation: fadeInSoft .5s ease both; }
+/* Frosted-glass surfaces */
+:root { --card: rgba(255, 253, 248, .92); }
+.panel, .pcard, .feature, .info-card, .kpi, .highlights, .campaign-banner, .fstep, .confirm-card, .how li, .about-p, .chip, .tab, .empty {
+  backdrop-filter: blur(10px) saturate(125%); -webkit-backdrop-filter: blur(10px) saturate(125%);
 }
+#site-header { background: rgba(250, 247, 239, .85); backdrop-filter: saturate(140%) blur(12px); -webkit-backdrop-filter: saturate(140%) blur(12px); }
+.admin-side { background: rgba(250, 247, 239, .75); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.explain { background: rgba(251, 239, 231, .92); }
+.config-note { background: rgba(238, 242, 231, .94); }
 
-/* ==== Magic wand ================================================================
-   Desktop: the pointer is a magic wand (hotspot = its star tip).
-   Every click: the wand flicks and light shoots out of its tip — a flare, beams and a
-   shower of stars that drift down like glitter. Page changes then bloom into the light. */
-@media (pointer: fine) {
-  html, body { cursor: url('/images/wand-cursor.svg') 4 4, auto; }
-  a, button, summary, select, label, [role="tab"], .chip, .thumb, .bundle-row, .oid, tr[data-id] { cursor: url('/images/wand-cursor.svg') 4 4, pointer; }
-  input[type="text"], input[type="email"], input[type="search"], input[type="password"], input[type="number"], input:not([type]), textarea { cursor: text; }
-  body.wand-casting, body.wand-casting * { cursor: none !important; }
-}
-.fx-cast { position: absolute; inset: 0; }
-/* The wand graphic: its tip (12,12 in a 96px box) sits exactly on the click point */
-.fx-wand { position: absolute; width: 96px; height: 96px; margin: -12px 0 0 -12px; transform-origin: 85% 85%;
-  background: url('/images/wand.svg') center / contain no-repeat;
-  animation: wandFlick .62s cubic-bezier(.3, 1.4, .4, 1) both; filter: drop-shadow(0 3px 6px rgba(40, 30, 10, .35)); }
-@keyframes wandFlick {
-  0% { transform: rotate(28deg) translate(10px, 10px); opacity: 0; }
-  18% { transform: rotate(32deg) translate(8px, 8px); opacity: 1; }
-  42% { transform: rotate(-14deg); opacity: 1; }
-  64% { transform: rotate(4deg); }
-  82% { transform: rotate(0deg); opacity: 1; }
-  100% { transform: rotate(0deg); opacity: 0; }
-}
-.fx-flare { position: absolute; width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%; background: #fff;
-  box-shadow: 0 0 18px 8px rgba(255, 250, 215, .95), 0 0 60px 26px rgba(255, 226, 140, .7), 0 0 120px 50px rgba(190, 240, 210, .35);
-  animation: flare .7s .14s ease-out both; }
-@keyframes flare { 0% { transform: scale(.2); opacity: 0; } 25% { transform: scale(1.6); opacity: 1; } 100% { transform: scale(3.2); opacity: 0; } }
-/* Beams of light shooting out of the tip */
-.fx-beam { position: absolute; height: 4px; width: var(--len, 200px); margin-top: -2px; transform-origin: 0 50%; border-radius: 4px;
-  background: linear-gradient(90deg, #ffffff 0%, rgba(255, 246, 200, .95) 25%, rgba(255, 226, 140, .6) 60%, rgba(255, 226, 140, 0) 100%);
-  box-shadow: 0 0 10px rgba(255, 240, 180, .9);
-  animation: beamShoot .7s calc(.16s + var(--d, 0s)) cubic-bezier(.15, .7, .25, 1) both; }
-@keyframes beamShoot {
-  0% { transform: rotate(var(--a)) translateX(0) scaleX(0); opacity: 0; }
-  15% { opacity: 1; }
-  45% { transform: rotate(var(--a)) translateX(10px) scaleX(1); opacity: 1; }
-  100% { transform: rotate(var(--a)) translateX(calc(var(--len, 200px) * .9)) scaleX(.15); opacity: 0; }
-}
-/* Stars that fly out, spin, and fall like glitter */
-.fx-star { position: absolute; width: var(--s, 14px); height: var(--s, 14px); margin: calc(var(--s, 14px) / -2) 0 0 calc(var(--s, 14px) / -2);
-  background: var(--c, #ffe58a); filter: drop-shadow(0 0 6px rgba(255, 236, 160, .95));
-  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-  animation: starFly var(--t, 1.1s) calc(.18s + var(--d, 0s)) cubic-bezier(.2, .8, .3, 1) both; }
-@keyframes starFly {
-  0% { transform: translate(0, 0) scale(.2) rotate(0deg); opacity: 0; }
-  10% { opacity: 1; }
-  60% { transform: translate(var(--x), var(--y)) scale(1) rotate(var(--r)); opacity: 1; }
-  100% { transform: translate(calc(var(--x) * 1.08), calc(var(--y) + 70px)) scale(.6) rotate(calc(var(--r) * 1.5)); opacity: 0; }
-}
-.fx-glitter { position: absolute; width: 4px; height: 4px; margin: -2px 0 0 -2px; border-radius: 50%; background: #fffbe6; box-shadow: 0 0 6px #ffe9a8;
-  animation: glitter 1.2s calc(.2s + var(--d, 0s)) ease-out both; }
-@keyframes glitter { 0% { transform: translate(0, 0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(var(--x), calc(var(--y) + 90px)); opacity: 0; } }
-
-/* Page change: the screen-filling light starts as the wand's light leaves the tip */
-.fx-burst .fx-flash { animation-delay: .2s; }
-.fx-burst .fx-rays { animation-delay: .16s; }
-.fx-burst .fx-core { display: none; }
-::view-transition-old(root), ::view-transition-old(topbar), ::view-transition-old(site-header) { animation-delay: .22s; }
-::view-transition-new(root) { animation-delay: .62s; }
-::view-transition-new(topbar), ::view-transition-new(site-header) { animation-delay: .64s; }
-
-/* The wand is a small, local effect, so it plays even with reduced motion (screen-wide effects stay gentle). */
-@media (prefers-reduced-motion: reduce) {
-  .fx-wand { animation: wandFlick .62s cubic-bezier(.3, 1.4, .4, 1) both !important; }
-  .fx-flare { animation: flare .7s .14s ease-out both !important; }
-  .fx-beam { animation: beamShoot .7s calc(.16s + var(--d, 0s)) cubic-bezier(.15, .7, .25, 1) both !important; }
-  .fx-star { display: block !important; animation: starFly var(--t, 1.1s) calc(.18s + var(--d, 0s)) cubic-bezier(.2, .8, .3, 1) both !important; }
-  .fx-glitter { animation: glitter 1.2s calc(.2s + var(--d, 0s)) ease-out both !important; }
-  ::view-transition-old(root), ::view-transition-old(topbar), ::view-transition-old(site-header) { animation-delay: .25s !important; }
-  ::view-transition-new(root), ::view-transition-new(topbar), ::view-transition-new(site-header) { animation-delay: .6s !important; }
-}
-/* The wand and its light always draw above the page-change light bloom */
-.fx-burst { z-index: 0; }
-.fx-cast:not(.fx-burst) { z-index: 2; }
-/* Wand refinements: stars outlined in gold for contrast; wand lingers a little longer */
-.fx-star { filter: drop-shadow(0 0 1.5px #c98a12) drop-shadow(0 0 7px rgba(255, 220, 120, .95)); }
-.fx-wand, .fx-wand[class] { animation-duration: .9s !important; }
+/* Quiet hover feedback only (no motion on navigation) */
+.pcard, .feature, .about-p { transition: box-shadow .2s ease, border-color .2s ease; }
+.pcard:hover, .feature:hover, .about-p:hover { box-shadow: 0 10px 28px rgba(40, 70, 50, .12); border-color: var(--green-200); }
