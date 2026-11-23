@@ -1,0 +1,62 @@
+{
+  "_note": "Offer configuration (PROMO-01/02/03). Editable from Admin > Offer Configuration or directly here. Inactive/expired offers stay stored but are never presented or priced as active.",
+  "offers": [
+    {
+      "id": "calm-balance-tiktok",
+      "slug": "calm-and-balance",
+      "status": "active",
+      "featured": true,
+      "name": "Calm & Balance Trio",
+      "campaign": "Calm & Balance (TikTok)",
+      "source": "tiktok",
+      "sourceLabel": "TikTok",
+      "headline": "Exclusive Cedar Bear Calm & Balance Trio",
+      "subheadline": "A limited-time TikTok exclusive — three alcohol-free herbal formulas for calm, rest and balance.",
+      "discountType": "percent",
+      "discountValue": 20,
+      "startsAt": "2026-11-01T00:00:00-08:00",
+      "expiresAt": "2027-01-31T23:59:00-08:00",
+      "heroImage": "/images/products/kava-calm-botanical.webp",
+      "items": [
+        { "productId": "kava-calm", "variantId": "60ml", "qty": 1, "note": "Relaxation & stress support (60 mL)" },
+        { "productId": "chamomile-relaxer", "variantId": "60ml", "qty": 1, "note": "Gentle nervous-system support (60 mL)" },
+        { "productId": "adrenal-balance", "variantId": "60ml", "qty": 1, "note": "Endocrine balance support (60 mL)" }
+      ],
+      "highlights": [
+        { "icon": "lotus", "title": "Calm & Relax", "text": "Kava and chamomile formulas for everyday calm." },
+        { "icon": "leaf", "title": "Herbal Balance", "text": "Adrenal Balance supports endocrine wellness." },
+        { "icon": "shield", "title": "Alcohol-Free", "text": "Every formula is alcohol-free, in 60 mL dropper bottles." },
+        { "icon": "truck", "title": "Limited-Time Offer", "text": "TikTok exclusive — save 20% today." }
+      ],
+      "testimonials": []
+    },
+    {
+      "id": "nightly-calm-duo",
+      "slug": "nightly-calm",
+      "status": "inactive",
+      "featured": false,
+      "name": "Nightly Calm Duo",
+      "campaign": "Nightly Calm (TikTok)",
+      "source": "tiktok",
+      "sourceLabel": "TikTok",
+      "headline": "The Cedar Bear Nightly Calm Duo",
+      "subheadline": "Kava Calm and Chamomile Relaxer together for a calmer evening routine.",
+      "discountType": "percent",
+      "discountValue": 15,
+      "startsAt": "2026-12-01T00:00:00-08:00",
+      "expiresAt": "2027-02-28T23:59:00-08:00",
+      "heroImage": "/images/products/chamomile-relaxer-botanical.webp",
+      "items": [
+        { "productId": "kava-calm", "variantId": "60ml", "qty": 1, "note": "Relaxation & stress support (60 mL)" },
+        { "productId": "chamomile-relaxer", "variantId": "60ml", "qty": 1, "note": "Gentle nervous-system support (60 mL)" }
+      ],
+      "highlights": [
+        { "icon": "lotus", "title": "Evening Calm", "text": "Two calming formulas in one routine." },
+        { "icon": "shield", "title": "Alcohol-Free", "text": "Gentle, alcohol-free herbal formulas." },
+        { "icon": "leaf", "title": "Herbal Formula", "text": "Thoughtfully selected botanicals." },
+        { "icon": "truck", "title": "Limited-Time Offer", "text": "Save 15% for a limited time." }
+      ],
+      "testimonials": []
+    }
+  ]
+}

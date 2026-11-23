@@ -1,0 +1,118 @@
+{
+  "_note": "Owner-supplied product data (Cedar Bear Herbal Formula line). Retail prices are PLACEHOLDERS pending owner approval. Prices are integer cents.",
+  "categories": [
+    { "id": "nervous", "label": "Nervous System", "icon": "lotus" },
+    { "id": "endocrine", "label": "Endocrine", "icon": "leaf" },
+    { "id": "bundles", "label": "Bundles", "icon": "gift" }
+  ],
+  "products": [
+    {
+      "id": "kava-calm",
+      "slug": "kava-calm",
+      "sku": "CB-HF-KAVA-60",
+      "name": "Kava Calm",
+      "active": true,
+      "featuredRank": 1,
+      "category": "nervous",
+      "categoryLabel": "Nervous System",
+      "labelLine": "Relaxation & Stress Support",
+      "shortDescription": "An alcohol-free herbal formula for relaxation and stress support.",
+      "description": "Cedar Bear Kava Calm is an alcohol-free herbal formula crafted to support relaxation and help you manage everyday stress. Delivered in a 60 mL amber dropper bottle for easy daily use.",
+      "images": [
+        { "src": "/images/products/kava-calm-bottle.webp", "alt": "Cedar Bear Kava Calm 60 mL dropper bottle" },
+        { "src": "/images/products/kava-calm-botanical.webp", "alt": "Kava Calm bottle with kava root, passionflower, chamomile, lavender and mint" }
+      ],
+      "variants": [
+        { "id": "60ml", "label": "60 mL (2 fl oz)", "short": "60 mL", "units": 1, "priceCents": 3490 },
+        { "id": "duo", "label": "Duo Pack (2 × 60 mL)", "short": "2 × 60 mL", "units": 2, "priceCents": 5990, "compareAtCents": 6980, "isBundle": true }
+      ],
+      "details": [
+        ["Product Type", "Herbal Formula (liquid)"],
+        ["Net Content", "60 mL (2 fl oz)"],
+        ["Formula", "Alcohol-free"],
+        ["Format", "Glass dropper bottle"],
+        ["Supports", "Relaxation & stress"]
+      ],
+      "features": [
+        "Alcohol-free herbal formula",
+        "Supports relaxation & everyday stress",
+        "Convenient dropper for measured servings",
+        "Dietary supplement"
+      ],
+      "botanicals": ["Kava root", "Passionflower", "Chamomile", "Lavender", "Mint"],
+      "reviews": []
+    },
+    {
+      "id": "chamomile-relaxer",
+      "slug": "chamomile-relaxer",
+      "sku": "CB-HF-CHAM-60",
+      "name": "Chamomile Relaxer",
+      "active": true,
+      "featuredRank": 2,
+      "category": "nervous",
+      "categoryLabel": "Nervous System",
+      "labelLine": "Nervous",
+      "shortDescription": "A gentle, alcohol-free chamomile formula for nervous-system support.",
+      "description": "Cedar Bear Chamomile Relaxer is a gentle, alcohol-free herbal formula built around chamomile to support a calm, balanced nervous system. Delivered in a 60 mL amber dropper bottle.",
+      "images": [
+        { "src": "/images/products/chamomile-relaxer-bottle.webp", "alt": "Cedar Bear Chamomile Relaxer 60 mL dropper bottle" },
+        { "src": "/images/products/chamomile-relaxer-botanical.webp", "alt": "Chamomile Relaxer bottle with chamomile, passionflower, rose and herbs" }
+      ],
+      "variants": [
+        { "id": "60ml", "label": "60 mL (2 fl oz)", "short": "60 mL", "units": 1, "priceCents": 2990 },
+        { "id": "duo", "label": "Duo Pack (2 × 60 mL)", "short": "2 × 60 mL", "units": 2, "priceCents": 5190, "compareAtCents": 5980, "isBundle": true }
+      ],
+      "details": [
+        ["Product Type", "Herbal Formula (liquid)"],
+        ["Net Content", "60 mL (2 fl oz)"],
+        ["Formula", "Alcohol-free"],
+        ["Format", "Glass dropper bottle"],
+        ["Supports", "Nervous system"]
+      ],
+      "features": [
+        "Alcohol-free herbal formula",
+        "Gentle chamomile-based blend",
+        "Convenient dropper for measured servings",
+        "Dietary supplement"
+      ],
+      "botanicals": ["Chamomile", "Passionflower", "Rose", "Catnip"],
+      "reviews": []
+    },
+    {
+      "id": "adrenal-balance",
+      "slug": "adrenal-balance",
+      "sku": "CB-HF-ADRN-60",
+      "name": "Adrenal Balance",
+      "active": true,
+      "featuredRank": 3,
+      "category": "endocrine",
+      "categoryLabel": "Endocrine",
+      "labelLine": "Endocrine",
+      "shortDescription": "An alcohol-free herbal formula for endocrine balance.",
+      "description": "Cedar Bear Adrenal Balance is an alcohol-free herbal formula designed to support endocrine balance as part of a healthy lifestyle. Delivered in a 60 mL amber dropper bottle.",
+      "images": [
+        { "src": "/images/products/adrenal-balance-bottle.webp", "alt": "Cedar Bear Adrenal Balance 60 mL dropper bottle" },
+        { "src": "/images/products/adrenal-balance-botanical.webp", "alt": "Adrenal Balance bottle with ginkgo, gotu kola, lavender, mint and rosemary" }
+      ],
+      "variants": [
+        { "id": "60ml", "label": "60 mL (2 fl oz)", "short": "60 mL", "units": 1, "priceCents": 3290 },
+        { "id": "duo", "label": "Duo Pack (2 × 60 mL)", "short": "2 × 60 mL", "units": 2, "priceCents": 5590, "compareAtCents": 6580, "isBundle": true }
+      ],
+      "details": [
+        ["Product Type", "Herbal Formula (liquid)"],
+        ["Net Content", "60 mL (2 fl oz)"],
+        ["Formula", "Alcohol-free"],
+        ["Format", "Glass dropper bottle"],
+        ["Supports", "Endocrine balance"]
+      ],
+      "features": [
+        "Alcohol-free herbal formula",
+        "Supports endocrine balance",
+        "Convenient dropper for measured servings",
+        "Dietary supplement"
+      ],
+      "botanicals": ["Ginkgo", "Gotu kola", "Lavender", "Mint", "Rosemary"],
+      "reviews": []
+    }
+  ]
+}

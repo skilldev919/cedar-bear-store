@@ -1,0 +1,13 @@
+{
+  "name": "cedar-bear-store",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cedar Bear retail storefront + promotional funnel — Phase 1 demo (simulated checkout only).",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node --test tests/"
+  },
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED"
+}
