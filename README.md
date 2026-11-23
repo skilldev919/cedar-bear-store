@@ -26,6 +26,10 @@ Change it under **Admin → Access & Security**, or set `ADMIN_PASSWORD` in the 
 
 Tests: `npm test` (acceptance tests AT-01…AT-09 against a real server with isolated data).
 
+### Local domain (Windows)
+
+Double-click **`start-local.cmd`**: it runs the server on port 80 and opens **http://cedarbear.localhost** (admin: http://cedarbear.localhost/admin). Browsers resolve any `*.localhost` name to this computer, so no hosts-file edit is needed. Close the window to stop the server. Local data (orders, accounts) is stored in `data/runtime/` and is separate from the live Vercel site.
+
 ## Pages
 
 | URL | Design | Notes |
