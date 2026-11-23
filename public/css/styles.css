@@ -181,7 +181,7 @@ s { color: var(--muted); }
 
 /* ---- Campaign banner ---- */
 .campaign-banner { display: grid; grid-template-columns: 300px 1fr auto; align-items: center; gap: 24px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); }
-.cb-art { position: relative; height: 110px; overflow: hidden; }
+.cb-art { position: relative; height: 110px; overflow: hidden; isolation: isolate; }
 .cb-art .phone { position: absolute; left: 50%; top: 14px; transform: translateX(-50%) rotate(-10deg); width: 92px; height: 120px; background: #121212; color: #fff; border-radius: 14px; display: grid; place-items: center; align-content: center; gap: 2px; font-size: .9rem; box-shadow: 0 8px 18px rgba(0, 0, 0, .25); }
 .cb-art .phone .ic { width: 26px; height: 26px; color: #ff3b6b; }
 .cb-copy h2 { margin-bottom: 4px; }
@@ -804,4 +804,78 @@ fieldset.field { border: 0; padding: 0; margin: 0; }
   .tl-time { grid-column: 3; font-size: .8rem; }
   .tl-ic { width: 36px; height: 36px; }
   .about-products { grid-template-columns: 1fr 1fr; }
+
+  /* --- Mobile layouts matching the smartphone mockups --- */
+  /* Home: headline + copy beside the product image, buttons full width below */
+  .hero-grid { grid-template-columns: minmax(0, 1fr) 36%; grid-template-areas: 'h img' 'p img' 'btn btn'; column-gap: 8px; row-gap: 10px; }
+  .hero-copy { display: contents; }
+  .hero-copy h1 { grid-area: h; font-size: 1.55rem; margin: 0; }
+  .hero-copy p { grid-area: p; font-size: .9rem; margin: 0; }
+  .hero-copy .btn-row { grid-area: btn; gap: 10px; }
+  .hero-grid > .hero-products { grid-area: img; height: 150px; align-self: center; }
+  .hero-grid > .hero-products .hp { height: 120px; margin: 0 -20px; }
+  .hero-grid > .hero-products .hp-1, .hero-grid > .hero-products .hp-2 { height: 100px; }
+  .hero::before { background: linear-gradient(180deg, rgba(250, 246, 238, .96) 0%, rgba(250, 246, 238, .8) 60%, rgba(250, 246, 238, .55) 100%); }
+
+  /* Shop: search, chips and sort first, then the Featured Offer card, then products */
+  .shop-page { display: flex; flex-direction: column; }
+  .shop-page .shop-head { display: contents; }
+  .shop-page .crumbs { order: 0; }
+  .shop-page .shop-head > div { order: 1; }
+  .shop-page .search { order: 2; }
+  .shop-page .filters { order: 3; margin: 12px 0; }
+  .shop-page .offer-teaser { order: 4; margin-bottom: 14px; min-height: 140px; }
+  .shop-page .result-count { order: 5; }
+  .shop-page #grid { order: 6; }
+  .shop-page .offer-teaser .hero-products { display: flex; width: 38%; height: 110px; right: 0; }
+  .shop-page .offer-teaser .hero-products .hp { height: 96px; margin: 0 -12px; }
+  .shop-page .offer-teaser .pill-off { font-size: .9rem; padding: 2px 10px; }
+  .shop-page .ot-copy { max-width: 64%; padding: 14px 16px; }
+  .shop-page .ot-copy p { font-size: .85rem; }
+
+  /* Offer: chips, headline, product image + badge, copy, Claim button */
+  .offer-hero-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .offer-copy { display: contents; }
+  .src-chips { order: 1; margin: 0; gap: 8px; }
+  .src-chip { font-size: .8rem; padding: 4px 10px; }
+  .offer-copy h1 { order: 2; font-size: 1.75rem; margin: 0; }
+  .offer-art { order: 3; }
+  .offer-copy .lead { order: 4; margin: 0; }
+  #claim { order: 5; width: 100%; }
+  .claim-note { order: 6; margin: 0; }
+
+  /* Checkout: Order Summary first, then the forms, then payment */
+  .co-left, .co-right { display: contents; }
+  .co-summary { order: -1; }
+  .panel-h > span { flex: 1 1 calc(100% - 60px); min-width: 0; }
+  .panel-h .btn, .panel-h .pill-terra-solid { margin-left: 54px; }
+
+  /* Admin: compact one-line order rows (ID, total, status, actions) */
+  .atable:not(.events):not(.compact) .cb { display: none; }
+  .atable:not(.events):not(.compact) tr { grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 8px; }
+  .atable:not(.events):not(.compact) td[data-label="Order ID"] .mini-tag { display: none; }
+  .atable:not(.events):not(.compact) tr { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+  .atable:not(.events):not(.compact) td[data-label="Total"] { text-align: right; }
+  .oid { font-size: .88rem; }
+  .atable .spill { font-size: .8rem; padding: 2px 9px; }
+  .hide-sm { display: none; }
+  .admin-head .auth-chip, .admin-head p { display: none; }
+  .kpi > span > small:last-child:not(:first-child) { display: none; }
+  .kpi > span > small:first-child { font-size: .8rem; }
+
+  /* Offer: both source chips on one line */
+  .src-chips { flex-wrap: nowrap; }
+  .src-chip { font-size: .72rem; padding: 3px 8px; gap: 4px; white-space: nowrap; }
+  .src-chip .ic { width: 14px; height: 14px; }
+
+  /* Product: SALE tags on their own row under the title; wider, shorter image */
+  .pp-title { gap: 8px; margin: 12px 0; }
+  .pp-title h1 { width: 100%; font-size: 1.6rem; }
+  .pp-title .code { font-size: .8rem; padding: 2px 12px; }
+  .gallery-main { aspect-ratio: 1.6; }
+  .duo-imgs img { width: 44px; height: 64px; }
+
+  /* Shop/home cards: compact like the mockups (no description) */
+  .pcard-desc { display: none; }
+  .page-top { padding-top: 14px; }
 }

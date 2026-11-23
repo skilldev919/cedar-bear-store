@@ -22,7 +22,7 @@ let navToken = 0;
 
 function topbar(admin) {
   $('#topbar').innerHTML = String(admin
-    ? html`<div class="topbar topbar-admin">${icon('lock')} <span>Authorized Access Only — Cedar Bear Administration</span></div>`
+    ? html`<div class="topbar topbar-admin">${icon('lock')} <span>Authorized Access Only<span class="hide-sm"> — Cedar Bear Administration</span></span></div>`
     : html`<div class="topbar">${icon('flask')} <span>Phase 1 Demo – Simulated Checkout Only</span></div>`);
 }
 

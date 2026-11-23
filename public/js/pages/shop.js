@@ -16,7 +16,7 @@ export default async function shop(root, { query }) {
   const chips = [{ id: 'all', label: 'All Products', icon: null }, ...config.categories];
 
   root.innerHTML = String(html`
-  <section class="container page-top">
+  <section class="container page-top shop-page">
     ${breadcrumb([{ label: 'Home', href: '/' }, { label: 'Shop' }])}
     <div class="shop-head">
       <div><h1>Shop All Products</h1><p class="lead">Discover Cedar Bear's collection of alcohol-free herbal formulas — crafted for a healthy lifestyle, naturally.</p></div>
