@@ -1074,3 +1074,10 @@ body::before {
   .auth-actions { gap: 5px; }
   .btn-auth-solid { padding: 6px 11px; }
 }
+
+/* ==== Launch intro (spiral reveal) ============================================== */
+#intro { position: fixed; inset: 0; z-index: 1000; background: radial-gradient(circle at 50% 45%, #2f5a3c, #24432f 55%, #14281b); cursor: pointer; }
+#intro.ready { background: transparent; }
+#intro svg { display: block; width: 100%; height: 100%; }
+#intro.out { opacity: 0; transition: opacity .35s ease; pointer-events: none; }
+html.intro-on, html.intro-on body { overflow: hidden; }

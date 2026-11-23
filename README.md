@@ -106,6 +106,7 @@ but is lost whenever Vercel recycles the instance. Add **Upstash for Redis** fro
 ## Look & feel
 
 - Calm, static design: an original morning-lake illustration (`public/images/bg-fresh-lake.svg`) softened behind frosted-glass cards and header.
+- Launch intro (`public/js/intro.js`): on the first visit of a browser session, a spiral-shaped hole opens in the centre of a green Cedar Bear cover, rotating and expanding for ~3 s until the page is fully shown. Click or press any key to skip.
 - Page navigation is instant with no transition effects; only quiet hover feedback on cards and buttons.
 - The Register / Log In pages are animated: card entrance with a rotating glowing border, fields that slide in, floating labels, a sliding tab indicator, live password-strength meter, a shake on errors and a self-drawing success check.
 
