@@ -100,6 +100,7 @@ but is lost whenever Vercel recycles the instance. Add **Upstash for Redis** fro
 
 - Soft morning-forest backdrop (`public/images/bg-fresh-lake.svg`, original SVG morning-lake scene) fixed behind all pages, with a drifting sun glow, floating bokeh lights and frosted-glass cards/header.
 - Page transitions (View Transitions API): on click, light blooms from the click point with beams radiating in all directions, the old page brightens and dissolves into the light, then the light recedes and the new page emerges; sparkles, leaves and petals scatter; content cascades in; sections below the fold reveal on scroll; hero bottles float. Browsers without View Transitions get the same light bloom with a CSS dissolve.
+- Magic wand: on desktop the pointer is a magic wand (`public/images/wand-cursor.svg`); on every click (or tap on phones) an animated wand (`wand.svg`) flicks and light shoots out of its tip — a flare, a fan of light beams and a shower of stars that drift down like glitter. Clicks inside form fields are excluded. The wand plays for all visitors (it is a small, local effect).
 - Visitors whose system requests reduced motion get a gentle version (soft light wash + cross-fade, no beams, particles or floating).
 
 ## Known limitations (Phase 1)

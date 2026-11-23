@@ -59,40 +59,77 @@ const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)')
 // ---- Page transitions & effects ------------------------------------------------
 const supportsVT = typeof document.startViewTransition === 'function';
 let lastPointer = null;
-document.addEventListener('pointerdown', (e) => { lastPointer = { x: e.clientX, y: e.clientY, t: Date.now() }; }, true);
-
 function fxLayer() {
   let el = document.querySelector('.fx-layer');
   if (!el) { el = document.createElement('div'); el.className = 'fx-layer'; el.setAttribute('aria-hidden', 'true'); document.body.append(el); }
   return el;
 }
+const rnd = (a, b) => a + Math.random() * (b - a);
+function spawn(parent, cls, x, y, vars = {}) {
+  const d = document.createElement('div');
+  d.className = cls;
+  d.style.left = `${x}px`;
+  d.style.top = `${y}px`;
+  for (const [k, v] of Object.entries(vars)) d.style.setProperty(k, v);
+  parent.append(d);
+  return d;
+}
 
-/** Light burst from the click point: a bright core, beams radiating in all directions and a bloom of
- *  light that covers the screen, plus (full motion) a scatter of sparkles, leaves and petals. */
-function fxBurst(x, y, full) {
+/** Magic wand: the wand flicks at the click point and light shoots out of its tip —
+ *  a flare, a fan of light beams and a shower of stars that fall like glitter. */
+function castWand(x, y) {
+  const cast = document.createElement('div');
+  cast.className = 'fx-cast';
+  fxLayer().append(cast);
+  spawn(cast, 'fx-wand', x, y);
+  spawn(cast, 'fx-flare', x, y);
+  // The wand points up-left, so the light shoots out in a fan centred on that direction.
+  const aim = -128;
+  for (let i = 0; i < 9; i++) {
+    const a = aim + (i - 4) * 13 + rnd(-5, 5);
+    spawn(cast, 'fx-beam', x, y, { '--a': `${a}deg`, '--len': `${Math.round(rnd(140, 300))}px`, '--d': `${(Math.abs(i - 4) * 0.018).toFixed(3)}s` });
+  }
+  const colors = ['#fff3b0', '#ffe07a', '#ffffff', '#c9f3dc', '#ffd1e6', '#ffe07a'];
+  for (let i = 0; i < 18; i++) {
+    const a = ((aim + rnd(-75, 75)) * Math.PI) / 180;
+    const dist = rnd(70, 230);
+    spawn(cast, 'fx-star', x, y, {
+      '--x': `${Math.round(Math.cos(a) * dist)}px`, '--y': `${Math.round(Math.sin(a) * dist)}px`,
+      '--r': `${Math.round(rnd(-360, 360))}deg`, '--s': `${Math.round(rnd(9, 22))}px`,
+      '--c': colors[i % colors.length], '--t': `${rnd(0.9, 1.4).toFixed(2)}s`, '--d': `${rnd(0, 0.12).toFixed(2)}s`,
+    });
+  }
+  for (let i = 0; i < 16; i++) {
+    const a = ((aim + rnd(-90, 90)) * Math.PI) / 180;
+    const dist = rnd(30, 160);
+    spawn(cast, 'fx-glitter', x, y, { '--x': `${Math.round(Math.cos(a) * dist)}px`, '--y': `${Math.round(Math.sin(a) * dist)}px`, '--d': `${rnd(0, 0.2).toFixed(2)}s` });
+  }
+  // Hide the real wand cursor while the animated wand flicks, so only one wand is visible.
+  document.body.classList.add('wand-casting');
+  clearTimeout(castWand.cursorTimer);
+  castWand.cursorTimer = setTimeout(() => document.body.classList.remove('wand-casting'), 600);
+  setTimeout(() => cast.remove(), 1900);
+}
+
+document.addEventListener('pointerdown', (e) => {
+  lastPointer = { x: e.clientX, y: e.clientY, t: Date.now() };
+  if (e.button !== 0) return;
+  // Don't cast while typing in form fields or using dropdowns.
+  if (e.target.closest('input, textarea, select, [contenteditable="true"], option')) return;
+  castWand(e.clientX, e.clientY);
+}, true);
+
+/** Page change: after the wand's light leaves the tip, it floods the screen (bloom + beams). */
+function fxBurst(x, y) {
   const layer = fxLayer();
-  layer.innerHTML = '';
+  layer.querySelectorAll('.fx-burst').forEach((b) => b.remove());
   layer.style.setProperty('--fx-x', `${Math.round(x)}px`);
   layer.style.setProperty('--fx-y', `${Math.round(y)}px`);
-  const add = (cls, css) => { const d = document.createElement('div'); d.className = cls; Object.assign(d.style, css); layer.append(d); return d; };
-  add('fx-flash', {});
-  add('fx-rays', {});
-  add('fx-core', {});
-  if (full) {
-    const kinds = ['spark', 'spark', 'leaf', 'petal', 'spark', 'leaf'];
-    for (let i = 0; i < 34; i++) {
-      const a = (Math.PI * 2 * i) / 34 + Math.random() * 0.4;
-      const dist = 110 + Math.random() * 260;
-      const p = add(`fx-p ${kinds[i % kinds.length]}`, { left: `${x}px`, top: `${y}px` });
-      p.style.setProperty('--x', `${Math.cos(a) * dist}px`);
-      p.style.setProperty('--y', `${Math.sin(a) * dist - 40}px`);
-      p.style.setProperty('--r', `${Math.round(Math.random() * 540 - 270)}deg`);
-      p.style.setProperty('--s', `${9 + Math.random() * 16}px`);
-      p.style.setProperty('--t', `${0.8 + Math.random() * 0.6}s`);
-    }
-  }
-  clearTimeout(fxBurst.timer);
-  fxBurst.timer = setTimeout(() => { layer.innerHTML = ''; }, 1500);
+  const burst = document.createElement('div');
+  burst.className = 'fx-cast fx-burst';
+  burst.innerHTML = '<div class="fx-flash"></div><div class="fx-rays"></div>';
+  layer.append(burst);
+  setTimeout(() => burst.remove(), 1700);
 }
 
 /** Floating bokeh lights behind the content (decorative). */
@@ -125,7 +162,7 @@ async function transition(update) {
   const p = lastPointer && Date.now() - lastPointer.t < 1500 ? lastPointer : { x: window.innerWidth / 2, y: window.innerHeight * 0.4 };
   document.documentElement.style.setProperty('--vt-x', `${Math.round(p.x)}px`);
   document.documentElement.style.setProperty('--vt-y', `${Math.round(p.y)}px`);
-  fxBurst(p.x, p.y, !reduceMotion());
+  fxBurst(p.x, p.y);
   if (supportsVT) {
     const t = document.startViewTransition(update);
     await t.updateCallbackDone.catch(() => {});
