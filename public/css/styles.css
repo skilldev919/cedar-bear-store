@@ -884,60 +884,145 @@ fieldset.field { border: 0; padding: 0; margin: 0; }
   .page-top { padding-top: 14px; }
 }
 
-/* ==== Background & motion ==================================================== */
-/* Gentle, refreshing backdrop: fixed layer so it stays put while content scrolls (works on iOS too). */
-body { background: var(--paper); }
+/* ==== Background, glass surfaces & motion ===================================== */
+/* Fresh morning-lake backdrop, fixed behind every page (fixed layer also works on iOS). */
+body { background: #eaf4ee; }
 body::before {
-  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background: url('/images/bg-forest-morning.svg') center bottom / cover no-repeat;
-  opacity: .9;
+  content: ''; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background: url('/images/bg-fresh-lake.svg') center bottom / cover no-repeat;
 }
-body::after { /* soft drifting light, very subtle */
-  content: ''; position: fixed; z-index: -1; pointer-events: none; width: 70vmax; height: 70vmax; right: -20vmax; top: -30vmax; border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 248, 222, .55) 0%, rgba(255, 248, 222, 0) 65%);
-  animation: glow 14s ease-in-out infinite alternate;
+/* Hero areas show the backdrop itself instead of the old drawn landscape */
+.scene { display: none; }
+.hero::before, .offer-hero::before, .cart-hero::before {
+  background: linear-gradient(90deg, rgba(255, 253, 246, .78) 0%, rgba(255, 253, 246, .55) 40%, rgba(255, 253, 246, 0) 72%);
 }
-@keyframes glow { from { transform: translate(0, 0) scale(1); opacity: .8; } to { transform: translate(-6vmax, 4vmax) scale(1.08); opacity: 1; } }
-/* Frosted header so the backdrop shows through softly */
-#site-header { background: rgba(246, 240, 228, .86); backdrop-filter: saturate(140%) blur(10px); -webkit-backdrop-filter: saturate(140%) blur(10px); }
+.confirm-hero::before { background: none; }
 .hero, .offer-hero, .cart-hero, .confirm-hero { background: transparent; }
+.offer-teaser { background: rgba(255, 253, 246, .55); }
+.offer-teaser::before { background: linear-gradient(90deg, rgba(255, 253, 246, .9) 0%, rgba(255, 253, 246, .65) 50%, rgba(255, 253, 246, .1) 85%); }
+.cb-art { background: linear-gradient(160deg, #cfeee4, #f5f1dd); }
+.hero-products .stone { background: radial-gradient(ellipse at center, rgba(160, 140, 110, .55) 0%, rgba(190, 175, 150, .35) 50%, rgba(207, 196, 174, 0) 72%); }
+.hero-products .hp { mix-blend-mode: multiply; filter: saturate(1.05); }
 
-/* Page transition: content fades and rises in on every navigation */
-.page-enter { animation: pageIn .55s cubic-bezier(.2, .7, .2, 1) both; }
-.page-leave { animation: pageOut .16s ease-in both; }
-@keyframes pageIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
-@keyframes pageOut { to { opacity: 0; transform: translateY(-6px); } }
+/* Frosted-glass cards and header so the scenery shows through softly */
+:root { --card: rgba(255, 253, 248, .9); }
+.panel, .pcard, .feature, .info-card, .kpi, .highlights, .campaign-banner, .fstep, .confirm-card, .how li, .about-p, .chip, .tab, .empty {
+  backdrop-filter: blur(10px) saturate(130%); -webkit-backdrop-filter: blur(10px) saturate(130%);
+}
+#site-header { background: rgba(250, 246, 236, .78); backdrop-filter: saturate(150%) blur(12px); -webkit-backdrop-filter: saturate(150%) blur(12px); }
+.admin-side { background: rgba(250, 246, 236, .7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.explain { background: rgba(251, 239, 231, .9); }
+.config-note { background: rgba(238, 242, 231, .92); }
 
-/* Staggered entrance for card groups */
-.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products) > * { animation: rise .6s cubic-bezier(.2, .7, .2, 1) both; }
-.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products) > :nth-child(1) { animation-delay: .08s; }
-.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products) > :nth-child(2) { animation-delay: .14s; }
-.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products) > :nth-child(3) { animation-delay: .2s; }
-.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products) > :nth-child(4) { animation-delay: .26s; }
-.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products) > :nth-child(n+5) { animation-delay: .32s; }
-@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+/* Ambient light: soft sun glow + floating bokeh (decorative, behind content) */
+.ambient { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.ambient .glow { position: absolute; width: 60vmax; height: 60vmax; right: -14vmax; top: -26vmax; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 249, 220, .75) 0%, rgba(255, 249, 220, 0) 62%); animation: glow 12s ease-in-out infinite alternate; }
+.ambient i { position: absolute; bottom: -40px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, .95), rgba(255, 255, 255, .25) 60%, rgba(255, 255, 255, 0) 70%);
+  animation: drift linear infinite; opacity: .0; }
+@keyframes glow { from { transform: translate(0, 0) scale(1); opacity: .75; } to { transform: translate(-5vmax, 3vmax) scale(1.1); opacity: 1; } }
+@keyframes drift { 0% { transform: translate(0, 0); opacity: 0; } 12% { opacity: .75; } 88% { opacity: .55; } 100% { transform: translate(var(--dx, 40px), -105vh); opacity: 0; } }
 
-/* Hero copy slides in; product bottles drift gently */
-.page-enter :is(.hero-copy, .offer-copy, .confirm-card) > * { animation: rise .7s cubic-bezier(.2, .7, .2, 1) both; }
-.page-enter :is(.hero-copy, .offer-copy) > :nth-child(2) { animation-delay: .08s; }
-.page-enter :is(.hero-copy, .offer-copy) > :nth-child(3) { animation-delay: .16s; }
-.page-enter :is(.hero-copy, .offer-copy) > :nth-child(n+4) { animation-delay: .22s; }
+/* ---- Page transitions ---------------------------------------------------- */
+/* View Transitions API (Chrome/Edge/Safari): the new page is revealed in an expanding circle from the
+   click point while the old page zooms back and blurs away. Header & top bar stay put. */
+#topbar { view-transition-name: topbar; }
+#site-header { view-transition-name: site-header; }
+.fx-layer { view-transition-name: fx; }
+::view-transition-group(topbar), ::view-transition-group(site-header) { animation: none; }
+::view-transition-old(root) { animation: vtOld .65s cubic-bezier(.5, 0, .3, 1) both; }
+::view-transition-new(root) { animation: vtReveal .75s cubic-bezier(.22, .8, .25, 1) both; mix-blend-mode: normal; }
+::view-transition-group(fx) { animation: none; }
+::view-transition-old(fx) { display: none; }
+::view-transition-new(fx) { animation: none; }
+@keyframes vtOld { to { transform: scale(.94); filter: blur(6px) saturate(.6); opacity: .25; } }
+@keyframes vtReveal {
+  from { clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 40%)); filter: brightness(1.25) saturate(1.2); }
+  60% { filter: brightness(1.06); }
+  to { clip-path: circle(150vmax at var(--vt-x, 50%) var(--vt-y, 40%)); filter: none; }
+}
+
+/* FX layer: light sweep + particle burst (works with or without View Transitions) */
+.fx-layer { position: fixed; inset: 0; z-index: 90; pointer-events: none; overflow: hidden; }
+.fx-sweep { position: absolute; top: -20%; bottom: -20%; width: 38%; left: -45%;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 252, 230, .55) 45%, rgba(255, 255, 255, .85) 50%, rgba(255, 252, 230, .55) 55%, rgba(255, 255, 255, 0) 100%);
+  transform: skewX(-18deg); animation: sweep .95s .12s cubic-bezier(.4, 0, .2, 1) both; mix-blend-mode: screen; }
+@keyframes sweep { to { left: 120%; } }
+.fx-ring { position: absolute; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; border: 3px solid rgba(255, 255, 255, .95);
+  box-shadow: 0 0 22px rgba(255, 240, 190, .9), inset 0 0 12px rgba(160, 220, 190, .8); animation: ring .7s ease-out both; }
+@keyframes ring { to { transform: scale(14); opacity: 0; border-width: .5px; } }
+.fx-p { position: absolute; width: var(--s, 10px); height: var(--s, 10px); margin: calc(var(--s, 10px) / -2) 0 0 calc(var(--s, 10px) / -2);
+  animation: burst var(--t, .9s) cubic-bezier(.15, .7, .3, 1) both; }
+.fx-p.spark { border-radius: 50%; background: radial-gradient(circle, #fffdf0 0%, #ffe7a3 45%, rgba(255, 231, 163, 0) 70%); }
+.fx-p.leaf { border-radius: 0 100% 0 100%; background: linear-gradient(135deg, #8fd0a2, #3f8f5c); }
+.fx-p.petal { border-radius: 60% 0 60% 0; background: linear-gradient(135deg, #ffd9c6, #e8845e); }
+@keyframes burst {
+  0% { transform: translate(0, 0) rotate(0) scale(.4); opacity: 0; }
+  12% { opacity: 1; }
+  100% { transform: translate(var(--x), var(--y)) rotate(var(--r)) scale(1); opacity: 0; }
+}
+
+/* Fallback for browsers without View Transitions: fade/rise in */
+.page-enter { animation: pageIn .6s cubic-bezier(.2, .7, .2, 1) both; }
+.page-leave { animation: pageOut .18s ease-in both; }
+@keyframes pageIn { from { opacity: 0; transform: translateY(18px) scale(.985); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes pageOut { to { opacity: 0; transform: translateY(-8px) scale(.99); } }
+
+/* Content choreography on every page: card groups cascade in */
+.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > *,
+.vt-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > * { animation: rise .65s cubic-bezier(.2, .8, .2, 1) both; }
+:is(.page-enter, .vt-enter) :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(1) { animation-delay: .18s; }
+:is(.page-enter, .vt-enter) :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(2) { animation-delay: .26s; }
+:is(.page-enter, .vt-enter) :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(3) { animation-delay: .34s; }
+:is(.page-enter, .vt-enter) :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(4) { animation-delay: .42s; }
+:is(.page-enter, .vt-enter) :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(n+5) { animation-delay: .5s; }
+@keyframes rise { from { opacity: 0; transform: translateY(26px) scale(.97); } to { opacity: 1; transform: none; } }
+:is(.page-enter, .vt-enter) :is(.hero-copy, .offer-copy, .confirm-card, .shop-head > div, .co-head, .admin-head) > * { animation: slideIn .75s cubic-bezier(.2, .8, .2, 1) both; }
+:is(.page-enter, .vt-enter) :is(.hero-copy, .offer-copy, .confirm-card) > :nth-child(2) { animation-delay: .1s; }
+:is(.page-enter, .vt-enter) :is(.hero-copy, .offer-copy, .confirm-card) > :nth-child(3) { animation-delay: .2s; }
+:is(.page-enter, .vt-enter) :is(.hero-copy, .offer-copy, .confirm-card) > :nth-child(n+4) { animation-delay: .28s; }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+:is(.page-enter, .vt-enter) .hero-products .hp { animation: bottleIn .9s cubic-bezier(.2, 1.2, .3, 1) both, float 7s 1s ease-in-out infinite; }
+:is(.page-enter, .vt-enter) .hero-products .hp-1 { animation-delay: .12s, 1.4s; }
+:is(.page-enter, .vt-enter) .hero-products .hp-2 { animation-delay: .24s, 1.8s; }
+@keyframes bottleIn { from { opacity: 0; transform: translateY(40px) scale(.85); } to { opacity: 1; transform: none; } }
 .hero-products .hp { animation: float 7s ease-in-out infinite; }
 .hero-products .hp-1 { animation-delay: -2.3s; } .hero-products .hp-2 { animation-delay: -4.6s; }
-@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
-.burst { animation: pop .7s .25s cubic-bezier(.2, 1.4, .4, 1) both; }
-@keyframes pop { from { opacity: 0; transform: rotate(-8deg) scale(.6); } to { opacity: 1; transform: rotate(-8deg) scale(1); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+.burst { animation: pop .8s .35s cubic-bezier(.2, 1.5, .4, 1) both; }
+@keyframes pop { from { opacity: 0; transform: rotate(-30deg) scale(.3); } to { opacity: 1; transform: rotate(-8deg) scale(1); } }
+.pill-off { animation: pulse 2.6s 1s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(204, 106, 69, .45); } 50% { box-shadow: 0 0 0 10px rgba(204, 106, 69, 0); } }
 
-/* Sections further down reveal softly as they scroll into view */
-.reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s ease, transform .7s cubic-bezier(.2, .7, .2, 1); }
+/* Scroll reveal for sections further down */
+.reveal { opacity: 0; transform: translateY(30px) scale(.98); transition: opacity .8s ease, transform .8s cubic-bezier(.2, .8, .2, 1); }
 .reveal.in { opacity: 1; transform: none; }
 
-/* Hover lift on interactive cards */
-.pcard, .info-card, .kpi, .bundle-row, .about-p { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
-.pcard:hover, .about-p:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(40, 60, 30, .12); }
-.btn-primary:hover, .btn-terra:hover { box-shadow: 0 6px 16px rgba(40, 60, 30, .18); }
+/* Interactive polish */
+.pcard, .info-card, .kpi, .feature, .bundle-row, .about-p { transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+.pcard:hover, .feature:hover, .about-p:hover { transform: translateY(-4px); box-shadow: 0 14px 34px rgba(40, 70, 50, .16); }
+.btn { position: relative; overflow: hidden; }
+.btn-primary::after, .btn-terra::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40%; left: -60%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .35), transparent); transform: skewX(-20deg); transition: left .6s ease; }
+.btn-primary:hover::after, .btn-terra:hover::after { left: 130%; }
+.btn-primary:hover, .btn-terra:hover { box-shadow: 0 8px 20px rgba(40, 60, 30, .22); }
 
+/* Reduced motion: keep a gentle, visible transition (fade + soft reveal); no particles, floating or parallax. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
-  .reveal { opacity: 1; transform: none; }
+  .ambient i, .fx-p, .fx-ring, .hero-products .hp, .pill-off { animation: none !important; }
+  .fx-p, .fx-ring, .ambient i { display: none; }
+  ::view-transition-old(root) { animation: vtFade .35s ease both; }
+  ::view-transition-new(root) { animation: vtRevealSoft .5s ease both; }
+  @keyframes vtFade { to { opacity: 0; } }
+  @keyframes vtRevealSoft { from { opacity: 0; clip-path: circle(0 at var(--vt-x, 50%) var(--vt-y, 40%)); } to { opacity: 1; clip-path: circle(150vmax at var(--vt-x, 50%) var(--vt-y, 40%)); } }
+  :is(.page-enter, .vt-enter) * { animation-duration: .4s !important; }
+  .reveal { transition-duration: .4s; }
+}
+
+/* Let hero bottles blend straight into the fixed backdrop (no isolated group) */
+.hero, .offer-hero, .cart-hero, .confirm-hero { isolation: auto; }
+@media (max-width: 900px) {
+  .hero::before, .offer-hero::before, .cart-hero::before {
+    background: linear-gradient(180deg, rgba(255, 253, 246, .82) 0%, rgba(255, 253, 246, .62) 60%, rgba(255, 253, 246, .2) 100%);
+  }
 }

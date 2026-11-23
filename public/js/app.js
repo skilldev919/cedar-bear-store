@@ -56,27 +56,94 @@ function footer() {
 
 const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export async function navigate(path, { replace = false } = {}) {
-  const main = $('#main');
-  // Brief fade-out of the current page before the next one rises in.
-  if (!replace && !reduceMotion() && main.children.length) {
-    main.classList.remove('page-enter');
-    main.classList.add('page-leave');
-    await new Promise((r) => setTimeout(r, 150));
-  }
-  if (replace) history.replaceState({}, '', path); else history.pushState({}, '', path);
-  window.scrollTo(0, 0);
-  await render();
+// ---- Page transitions & effects ------------------------------------------------
+const supportsVT = typeof document.startViewTransition === 'function';
+let lastPointer = null;
+document.addEventListener('pointerdown', (e) => { lastPointer = { x: e.clientX, y: e.clientY, t: Date.now() }; }, true);
+
+function fxLayer() {
+  let el = document.querySelector('.fx-layer');
+  if (!el) { el = document.createElement('div'); el.className = 'fx-layer'; el.setAttribute('aria-hidden', 'true'); document.body.append(el); }
+  return el;
 }
 
-/** Entrance animation for the freshly rendered page + soft reveal of sections below the fold. */
+/** Light sweep + (full motion) ring and burst of sparkles, leaves and petals from the click point. */
+function fxBurst(x, y, full) {
+  const layer = fxLayer();
+  layer.innerHTML = '';
+  const add = (cls, css) => { const d = document.createElement('div'); d.className = cls; Object.assign(d.style, css); layer.append(d); return d; };
+  add('fx-sweep', {});
+  if (full) {
+    add('fx-ring', { left: `${x}px`, top: `${y}px` });
+    const kinds = ['spark', 'spark', 'leaf', 'petal', 'spark', 'leaf'];
+    for (let i = 0; i < 34; i++) {
+      const a = (Math.PI * 2 * i) / 34 + Math.random() * 0.4;
+      const dist = 110 + Math.random() * 260;
+      const p = add(`fx-p ${kinds[i % kinds.length]}`, { left: `${x}px`, top: `${y}px` });
+      p.style.setProperty('--x', `${Math.cos(a) * dist}px`);
+      p.style.setProperty('--y', `${Math.sin(a) * dist - 40}px`);
+      p.style.setProperty('--r', `${Math.round(Math.random() * 540 - 270)}deg`);
+      p.style.setProperty('--s', `${9 + Math.random() * 16}px`);
+      p.style.setProperty('--t', `${0.8 + Math.random() * 0.6}s`);
+    }
+  }
+  clearTimeout(fxBurst.timer);
+  fxBurst.timer = setTimeout(() => { layer.innerHTML = ''; }, 1700);
+}
+
+/** Floating bokeh lights behind the content (decorative). */
+function ambient() {
+  if (document.querySelector('.ambient')) return;
+  const a = document.createElement('div');
+  a.className = 'ambient';
+  a.setAttribute('aria-hidden', 'true');
+  let h = '<div class="glow"></div>';
+  for (let i = 0; i < 16; i++) {
+    const size = 6 + Math.random() * 18;
+    h += `<i style="left:${Math.random() * 100}%;width:${size}px;height:${size}px;animation-duration:${16 + Math.random() * 18}s;animation-delay:-${Math.random() * 30}s;--dx:${Math.round(Math.random() * 120 - 60)}px"></i>`;
+  }
+  a.innerHTML = h;
+  document.body.prepend(a);
+}
+
+export async function navigate(path, { replace = false } = {}) {
+  const update = async () => {
+    if (replace) history.replaceState({}, '', path); else history.pushState({}, '', path);
+    window.scrollTo(0, 0);
+    await render();
+  };
+  if (replace) { await update(); return; }
+  await transition(update);
+}
+
+/** Runs a DOM update inside the page transition (View Transitions when available, CSS fallback otherwise). */
+async function transition(update) {
+  const p = lastPointer && Date.now() - lastPointer.t < 1500 ? lastPointer : { x: window.innerWidth / 2, y: window.innerHeight * 0.4 };
+  document.documentElement.style.setProperty('--vt-x', `${Math.round(p.x)}px`);
+  document.documentElement.style.setProperty('--vt-y', `${Math.round(p.y)}px`);
+  fxBurst(p.x, p.y, !reduceMotion());
+  if (supportsVT) {
+    const t = document.startViewTransition(update);
+    await t.updateCallbackDone.catch(() => {});
+    return;
+  }
+  const main = $('#main');
+  if (main.children.length) {
+    main.classList.remove('page-enter');
+    main.classList.add('page-leave');
+    await new Promise((r) => setTimeout(r, 170));
+  }
+  await update();
+}
+
+/** Entrance choreography for the freshly rendered page + reveal of sections below the fold. */
 let revealObserver;
 function animatePage(main) {
-  main.classList.remove('page-leave', 'page-enter');
-  if (reduceMotion()) return;
-  void main.offsetWidth; // restart the CSS animation
-  main.classList.add('page-enter');
-  setTimeout(() => main.classList.remove('page-enter'), 1200);
+  main.classList.remove('page-leave', 'page-enter', 'vt-enter');
+  void main.offsetWidth; // restart the CSS animations
+  const cls = supportsVT ? 'vt-enter' : 'page-enter';
+  main.classList.add(cls);
+  setTimeout(() => main.classList.remove(cls), 1600);
   if (!('IntersectionObserver' in window)) return;
   revealObserver?.disconnect();
   revealObserver = new IntersectionObserver((entries) => entries.forEach((en) => {
@@ -142,7 +209,7 @@ document.addEventListener('click', (e) => {
   if (url.pathname === location.pathname && url.search === location.search && url.hash) { location.hash = url.hash; return; }
   navigate(url.pathname + url.search + url.hash);
 });
-window.addEventListener('popstate', render);
+window.addEventListener('popstate', () => transition(render));
 cart.subscribe(() => {
   const n = cart.count();
   document.querySelectorAll('.cart-count').forEach((el) => { el.textContent = `(${n})`; });
@@ -150,4 +217,5 @@ cart.subscribe(() => {
 });
 
 footer();
+ambient();
 render();

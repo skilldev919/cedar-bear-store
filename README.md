@@ -92,9 +92,9 @@ but is lost whenever Vercel recycles the instance. Add **Upstash for Redis** fro
 
 ## Look & feel
 
-- Soft morning-forest backdrop (`public/images/bg-forest-morning.svg`, original SVG) fixed behind all pages, with a slow drifting light glow and a frosted header.
-- Page transitions: the current page fades out and the next one rises in; card groups enter with a short stagger; sections below the fold reveal on scroll; hero bottles float gently.
-- All motion is disabled automatically for visitors whose system requests reduced motion.
+- Soft morning-forest backdrop (`public/images/bg-fresh-lake.svg`, original SVG morning-lake scene) fixed behind all pages, with a drifting sun glow, floating bokeh lights and frosted-glass cards/header.
+- Page transitions (View Transitions API): the next page opens in an expanding circle from the click point while the old page zooms back and blurs, with a light sweep, a glowing ring and a burst of sparkles, leaves and petals; card groups cascade in; sections below the fold reveal on scroll; hero bottles float. Browsers without View Transitions get a fade/rise fallback.
+- Visitors whose system requests reduced motion get a gentle version (circular reveal + fade, no particles or floating).
 
 ## Known limitations (Phase 1)
 
