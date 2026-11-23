@@ -112,6 +112,38 @@ class RedisEventRepo {
   async clear() { await redisCmd('DEL', k('events:list')); }
 }
 
+// ---------------------------------------------------------------- users ----
+class LocalUserRepo {
+  constructor(file) { this.src = new JsonFile(file, { users: [] }); }
+  async get(email) { return this.src.read().users.find((u) => u.email === email) || null; }
+  async create(user) {
+    const d = this.src.read();
+    if (d.users.some((u) => u.email === user.email)) return false;
+    d.users.push(user);
+    this.src.write(d);
+    return true;
+  }
+  async all() { return this.src.read().users; }
+}
+class RedisUserRepo {
+  async get(email) { const v = await redisCmd('GET', k(`user:${email}`)); return v ? JSON.parse(v) : null; }
+  /** Atomic: SET NX guarantees one account per email even with concurrent sign-ups. */
+  async create(user) {
+    if ((await redisCmd('SET', k(`user:${user.email}`), JSON.stringify(user), 'NX')) !== 'OK') return false;
+    await redisCmd('RPUSH', k('users:emails'), user.email);
+    return true;
+  }
+  async all() {
+    const emails = (await redisCmd('LRANGE', k('users:emails'), 0, -1)) || [];
+    const out = [];
+    for (let i = 0; i < emails.length; i += 200) {
+      const vals = await redisCmd('MGET', ...emails.slice(i, i + 200).map((e) => k(`user:${e}`)));
+      vals.forEach((v) => { if (v) out.push(JSON.parse(v)); });
+    }
+    return out;
+  }
+}
+
 /** Login-failure counter shared by all instances (lockout cannot be bypassed by hitting another instance). */
 const failCounter = remoteEnabled ? {
   async count(ip) { return Number((await redisCmd('GET', k(`fails:${ip}`))) || 0); },
@@ -122,5 +154,6 @@ const failCounter = remoteEnabled ? {
 module.exports = {
   orderRepo: (file) => (remoteEnabled ? new RedisOrderRepo() : new LocalOrderRepo(file)),
   eventRepo: (file, max) => (remoteEnabled ? new RedisEventRepo(max) : new LocalEventRepo(file, max)),
+  userRepo: (file) => (remoteEnabled ? new RedisUserRepo() : new LocalUserRepo(file)),
   failCounter,
 };

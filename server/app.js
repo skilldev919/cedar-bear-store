@@ -10,6 +10,7 @@ const { SimulatedPaymentProvider } = require('./payment');
 const { Orders, ORDER_STATUSES, US_STATES } = require('./orders');
 const { Events, EVENT_TYPES } = require('./events');
 const { Auth } = require('./auth');
+const { Accounts, publicUser } = require('./accounts');
 const reports = require('./reports');
 const { syncIn, flush } = require('./store');
 
@@ -39,6 +40,7 @@ function createApp({ root = path.join(__dirname, '..'), dataDir, runtimeDir, adm
   const events = new Events(path.join(runtimeDir, 'events.json'));
   const orders = new Orders(path.join(runtimeDir, 'orders.json'), { pricing, payment: new SimulatedPaymentProvider(), events, offers, settings });
   const auth = new Auth(path.join(runtimeDir, 'auth.json'), { envPassword: adminPassword, secureCookies, sessionSecret });
+  const accounts = new Accounts(path.join(runtimeDir, 'users.json'), { secret: () => auth.customerSecret(), secureCookies });
 
   const publicProduct = (p) => {
     const { active, ...rest } = p;
@@ -79,12 +81,31 @@ function createApp({ root = path.join(__dirname, '..'), dataDir, runtimeDir, adm
     if (!o || !offers.isActive(o)) throw new HttpError(404, 'This offer is not currently available', { inactive: Boolean(o) });
     return { offer: offers.publicView(o) };
   });
-  on('POST', '/api/cart/quote', async ({ req }) => pricing.quote(await readJson(req)));
+  // Customer accounts (registration / login). Shopping features below require a logged-in customer.
+  on('POST', '/api/account/register', async ({ req, res }) => {
+    const user = await accounts.register(await readJson(req));
+    res.setHeader('Set-Cookie', accounts.issue(user));
+    return { user: publicUser(user) };
+  });
+  on('POST', '/api/account/login', async ({ req, res }) => {
+    const user = await accounts.login(req, await readJson(req));
+    res.setHeader('Set-Cookie', accounts.issue(user));
+    return { user: publicUser(user) };
+  });
+  on('POST', '/api/account/logout', ({ res }) => { res.setHeader('Set-Cookie', accounts.logout()); return { ok: true }; });
+  on('GET', '/api/account/me', ({ req }) => {
+    const u = accounts.session(req);
+    if (!u) throw new HttpError(401, 'Not logged in', { loginRequired: true });
+    return { user: u };
+  });
+
+  on('POST', '/api/cart/quote', async ({ req }) => { accounts.require(req); return pricing.quote(await readJson(req)); });
   on('POST', '/api/orders', async ({ req }) => {
-    const order = await orders.create(await readJson(req));
+    const account = accounts.require(req);
+    const order = await orders.create(await readJson(req), { account });
     return { orderId: order.id, token: order.token, order: await orders.publicView(order.id, order.token) };
   });
-  on('GET', '/api/orders/:id', async ({ params, url }) => ({ order: await orders.publicView(params.id, url.searchParams.get('token')) }));
+  on('GET', '/api/orders/:id', async ({ req, params, url }) => { accounts.require(req); return { order: await orders.publicView(params.id, url.searchParams.get('token')) }; });
   on('POST', '/api/events', async ({ req }) => { const e = await events.record(await readJson(req)); return { ok: true, id: e.id }; });
 
   // Admin auth
@@ -146,6 +167,13 @@ function createApp({ root = path.join(__dirname, '..'), dataDir, runtimeDir, adm
   on('PUT', '/api/admin/offers/:id', async ({ req, params }) => {
     const o = offers.update(params.id, await readJson(req));
     return { offer: { ...o, state: offers.publicView(o).state } };
+  }, { admin: true });
+  on('GET', '/api/admin/customers', async () => {
+    const [list, all] = await Promise.all([accounts.list(), orders.all()]);
+    return { customers: list.map((c) => {
+      const mine = all.filter((o) => o.account?.id === c.id);
+      return { ...c, orders: mine.length, lastOrderAt: mine.length ? mine.map((o) => o.createdAt).sort().pop() : null };
+    }) };
   }, { admin: true });
   on('GET', '/api/admin/security', ({ session }) => auth.securityInfo(session), { admin: true });
   on('POST', '/api/admin/password', async ({ req, res }) => {
@@ -211,7 +239,7 @@ function createApp({ root = path.join(__dirname, '..'), dataDir, runtimeDir, adm
     }
   }
 
-  return { server: http.createServer(handler), handler, auth, orders, events, offers, catalog, pricing };
+  return { server: http.createServer(handler), handler, auth, accounts, orders, events, offers, catalog, pricing };
 }
 
 module.exports = { createApp };

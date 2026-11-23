@@ -98,3 +98,28 @@ export const orderTokens = {
   set(id, token) { const m = store.get(KEYS.orders, {}) || {}; m[id] = token; store.set(KEYS.orders, m); },
 };
 export { uuid };
+
+// ---- Customer account (login state) -----------------------------------------
+let me = null;
+let meLoaded = false;
+let meLoading = null;
+export const account = {
+  get user() { return me; },
+  /** Fetches the logged-in customer once (cached); returns the user or null. */
+  load(force = false) {
+    if (meLoaded && !force) return Promise.resolve(me);
+    meLoading ||= fetch('/api/account/me', { credentials: 'same-origin' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => { me = j ? j.user : null; meLoaded = true; return me; })
+      .catch(() => me)
+      .finally(() => { meLoading = null; });
+    return meLoading;
+  },
+  set(user) { me = user; meLoaded = true; },
+  clear() { me = null; meLoaded = true; },
+};
+/** Only same-site paths are allowed as a post-login destination (prevents open redirects). */
+export function safeNext(next) {
+  return typeof next === 'string' && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') &&!/^\/(login|register)\b/.test(next) ? next : '/shop';
+}
+export const loginUrl = (next = location.pathname + location.search) => `/login?next=${encodeURIComponent(safeNext(next))}`;

@@ -1,5 +1,5 @@
 import { html, raw, icon, money, pctOff, api, toast, offerBadge } from './lib.js';
-import { cart, track } from './state.js';
+import { cart, track, account } from './state.js';
 
 // ---- Cached storefront data -------------------------------------------------
 let cache = {};
@@ -77,6 +77,11 @@ export function bindProductCards(root, products) {
 }
 
 export function addToCart(p, variantId, qty, offer = null) {
+  if (!account.user) {
+    toast('Please log in or register to start shopping', { tone: 'info' });
+    window.dispatchEvent(new CustomEvent('cb:login-required'));
+    return;
+  }
   cart.add({ productId: p.id, variantId, qty, offerId: offer ? offer.id : null });
   const v = p.variants.find((x) => x.id === variantId);
   track('add_to_cart', { productId: p.id, offerId: offer ? offer.id : undefined, label: `Added ${qty} × ${p.name} (${v ? v.short : variantId}) to cart${offer ? ' via offer' : ''}` });

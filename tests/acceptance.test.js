@@ -9,6 +9,7 @@ const { createApp } = require('../server/app');
 
 const ROOT = path.join(__dirname, '..');
 let base, app, tmp;
+let CUST = null; // logged-in customer cookie (shopping APIs require login)
 const PW = 'test-admin-password-123';
 
 before(async () => {
@@ -18,10 +19,13 @@ before(async () => {
   app = createApp({ root: ROOT, dataDir: tmp, runtimeDir: path.join(tmp, 'runtime'), adminPassword: PW });
   await new Promise((r) => app.server.listen(0, '127.0.0.1', r));
   base = `http://127.0.0.1:${app.server.address().port}`;
+  const reg = await fetch(`${base}/api/account/register`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: 'Test Shopper', email: 'shopper@example.com', password: 'shopper-pass-1' }) });
+  CUST = reg.headers.get('set-cookie').split(';')[0];
 });
 after(() => { app.server.close(); fs.rmSync(tmp, { recursive: true, force: true }); });
 
-async function call(p, { method = 'GET', body, cookie } = {}) {
+async function call(p, { method = 'GET', body, cookie = CUST } = {}) {
   const res = await fetch(base + p, {
     method,
     headers: { ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}), ...(cookie ? { Cookie: cookie } : {}) },
@@ -214,7 +218,7 @@ test('AT-09: sample data + event funnel are inspectable', async () => {
 
 test('security: static path traversal and non-JSON posts are refused', async () => {
   assert.notEqual((await call('/..%2fdata%2fruntime%2fauth.json')).status, 200);
-  const r = await fetch(`${base}/api/orders`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'a=1' });
+  const r = await fetch(`${base}/api/orders`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: CUST }, body: 'a=1' });
   assert.equal(r.status, 415);
 });
 
@@ -252,6 +256,55 @@ test('PROMO-02/03: offer variations, imagery, fixed discounts and bundle quantit
   const q = (await call('/api/cart/quote', { method: 'POST', body: { items: [{ productId: 'kava-calm', variantId: 'duo', qty: 2, offerId: v.id }] } })).json;
   assert.equal(q.totals.discountCents, 1000);
 });
+
+test('Accounts: register, log in, log out; shopping features require login', async () => {
+  // Public homepage data stays available without login
+  assert.equal((await call('/api/products', { cookie: '' })).status, 200);
+  assert.equal((await call('/api/offers/featured', { cookie: '' })).status, 200);
+  // Shopping features are refused without a login
+  const items = [{ productId: 'kava-calm', variantId: '60ml', qty: 1 }];
+  assert.equal((await call('/api/cart/quote', { method: 'POST', body: { items }, cookie: '' })).status, 401);
+  assert.equal((await call('/api/orders', { method: 'POST', body: checkout(items), cookie: '' })).status, 401);
+  assert.equal((await call('/api/account/me', { cookie: '' })).status, 401);
+  // Validation
+  assert.equal((await call('/api/account/register', { method: 'POST', cookie: '', body: { name: 'A', email: 'bad', password: 'abcdefg1' } })).status, 400);
+  assert.equal((await call('/api/account/register', { method: 'POST', cookie: '', body: { name: 'A', email: 'a@b.co', password: 'short1' } })).status, 400);
+  assert.equal((await call('/api/account/register', { method: 'POST', cookie: '', body: { name: 'A', email: 'a@b.co', password: 'nodigitshere' } })).status, 400);
+  // Register → logged in
+  const reg = await call('/api/account/register', { method: 'POST', cookie: '', body: { name: 'Riley Brooks', email: 'Riley@Example.com', password: 'riley-pass-9' } });
+  assert.equal(reg.status, 200);
+  assert.equal(reg.json.user.email, 'riley@example.com');
+  assert.ok(!('credential' in reg.json.user));
+  const cookie = reg.headers.get('set-cookie').split(';')[0];
+  assert.match(reg.headers.get('set-cookie'), /HttpOnly/);
+  assert.equal((await call('/api/account/me', { cookie })).json.user.name, 'Riley Brooks');
+  // Duplicate email (case-insensitive) is refused, also under concurrency
+  const dup = await Promise.all([1, 2, 3].map(() => call('/api/account/register', { method: 'POST', cookie: '', body: { name: 'X', email: 'dupe@example.com', password: 'dupe-pass-1' } })));
+  assert.deepEqual(dup.map((r) => r.status).sort(), [200, 409, 409]);
+  assert.equal((await call('/api/account/register', { method: 'POST', cookie: '', body: { name: 'X', email: 'RILEY@example.com', password: 'other-pass-1' } })).status, 409);
+  // Login
+  assert.equal((await call('/api/account/login', { method: 'POST', cookie: '', body: { email: 'riley@example.com', password: 'wrong-pass-1' } })).status, 401);
+  assert.equal((await call('/api/account/login', { method: 'POST', cookie: '', body: { email: 'nobody@example.com', password: 'riley-pass-9' } })).status, 401);
+  const login = await call('/api/account/login', { method: 'POST', cookie: '', body: { email: 'RILEY@example.com', password: 'riley-pass-9' } });
+  assert.equal(login.status, 200);
+  const c2 = login.headers.get('set-cookie').split(';')[0];
+  // Tampered cookie is rejected
+  assert.equal((await call('/api/account/me', { cookie: c2.slice(0, -4) + 'abcd' })).status, 401);
+  // Orders are linked to the account; admin can see customers
+  const o = await call('/api/orders', { method: 'POST', cookie: c2, body: checkout(items) });
+  assert.equal(o.status, 200);
+  assert.equal((await app.orders.get(o.json.orderId)).account.email, 'riley@example.com');
+  const adm = await login_admin();
+  const cust = (await call('/api/admin/customers', { cookie: adm })).json.customers;
+  const riley = cust.find((c) => c.email === 'riley@example.com');
+  assert.equal(riley.orders, 1);
+  assert.ok(cust.every((c) => !('credential' in c)));
+  assert.equal((await call('/api/admin/customers', { cookie: '' })).status, 401);
+  // Logout clears the cookie
+  const out = await call('/api/account/logout', { method: 'POST', body: {}, cookie: c2 });
+  assert.match(out.headers.get('set-cookie'), /Max-Age=0/);
+});
+async function login_admin() { return login(); }
 
 test('Admin lockout: repeated wrong passwords are blocked (429)', async () => {
   let last;

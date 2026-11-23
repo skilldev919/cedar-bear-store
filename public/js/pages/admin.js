@@ -6,6 +6,7 @@ const SECTIONS = [
   { id: 'operations', label: 'Operations Dashboard', icon: 'chart' },
   { id: 'orders', label: 'Test Orders', icon: 'cart' },
   { id: 'events', label: 'Campaign Events', icon: 'megaphone' },
+  { id: 'customers', label: 'Customers', icon: 'user' },
   { id: 'offers', label: 'Offer Configuration', icon: 'tag' },
   { id: 'security', label: 'Access & Security', icon: 'shield', sep: true },
 ];
@@ -43,7 +44,7 @@ export default async function admin(root, { params, query }) {
     <div class="admin-main" id="admin-main"><div class="page-loading"></div></div>
   </div>`);
   const main = root.querySelector('#admin-main');
-  const views = { operations, orders: ordersView, events: eventsView, offers: offersView, security: securityView };
+  const views = { operations, orders: ordersView, events: eventsView, customers: customersView, offers: offersView, security: securityView };
   try {
     await views[section](main, query);
   } catch (e) {
@@ -148,6 +149,7 @@ function createOrdersPanel(container, allOrders, { limit = 0, initialId = null, 
           <dl class="kv">
             <dt>Customer</dt><dd>${o.customer.name}</dd>
             <dt>Email</dt><dd>${o.customer.email}</dd>
+            <dt>Account</dt><dd>${o.account ? o.account.email : 'Guest (before accounts)'}</dd>
             <dt>Order Date</dt><dd>${fmtDateTime(o.createdAt)}</dd>
             <dt>Order Total</dt><dd><b>${money(o.totals.totalCents)}</b></dd>
             <dt>Source</dt><dd>${sourceLabel(o.attribution?.source || 'direct')}${o.attribution?.campaign ? html` · ${o.attribution.campaign}` : ''}</dd>
@@ -280,6 +282,18 @@ async function eventsView(main) {
     main.querySelector('#f-src').addEventListener('change', (e) => { st.source = e.target.value; load(); });
   }
   await load();
+}
+
+async function customersView(main) {
+  const { customers } = await api('/api/admin/customers');
+  main.innerHTML = String(html`<div class="admin-head"><div><h1>Customers</h1><p class="muted">Registered customer accounts. Passwords are stored as salted hashes and are never shown.</p></div></div>
+    <section class="panel">
+      <div class="panel-title"><div><h2>${icon('user')} Accounts <span>(${customers.length})</span></h2></div></div>
+      ${customers.length ? html`<div class="table-scroll"><table class="atable compact customers">
+        <thead><tr><th>Name</th><th>Email</th><th>Registered</th><th>Orders</th><th>Last order</th></tr></thead>
+        <tbody>${customers.map((c) => html`<tr><td data-label="Name"><b>${c.name}</b></td><td data-label="Email">${c.email}</td><td data-label="Registered">${fmtDateTime(c.createdAt)}</td><td data-label="Orders">${c.orders}</td><td data-label="Last order">${c.lastOrderAt ? fmtDateTime(c.lastOrderAt) : '—'}</td></tr>`)}</tbody>
+      </table></div>` : html`<div class="empty small">${icon('user')}<p>No customers have registered yet.</p></div>`}
+    </section>`);
 }
 
 const toLocalInput = (iso) => { if (!iso) return ''; const d = new Date(iso); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); };

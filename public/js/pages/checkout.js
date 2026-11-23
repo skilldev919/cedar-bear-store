@@ -1,6 +1,6 @@
 import { html, icon, money, setTitle, api } from '../lib.js';
 import { data, emptyState } from '../components.js';
-import { cart, track, attribution, sessionId, rotateSession, orderTokens, uuid } from '../state.js';
+import { cart, track, attribution, sessionId, rotateSession, orderTokens, uuid, account } from '../state.js';
 import { navigate } from '../app.js';
 import { serverQuote } from './cart.js';
 
@@ -66,6 +66,8 @@ export default async function checkout(root) {
 
   const $ = (s) => root.querySelector(s);
   const form = $('#co-form');
+  // Pre-fill from the customer's account
+  if (account.user) { $('#name').value = account.user.name; $('#email').value = account.user.email; }
 
   async function refresh() {
     try { st.quote = await serverQuote(st.shippingMethod); } catch (e) { $('#summary').innerHTML = String(html`<div class="notice notice-error">${e.message}</div>`); return; }

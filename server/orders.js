@@ -57,7 +57,7 @@ class Orders {
   all() { return this.repo.all(); }
   get(id) { return this.repo.get(id); }
 
-  async create(body, { sample = false, createdAt } = {}) {
+  async create(body, { sample = false, createdAt, account = null } = {}) {
     const input = validateCheckout(body, this.settings);
     // Idempotency: a retried/double-clicked submission returns the same order (AT-06).
     const key = input.idempotencyKey;
@@ -72,7 +72,7 @@ class Orders {
         throw new HttpError(409, 'This order is already being processed — please wait a moment and refresh.');
       }
       try {
-        const order = await this._create(body, input, { sample, createdAt });
+        const order = await this._create(body, input, { sample, createdAt, account });
         await this.repo.complete(key, order.id);
         return order;
       } catch (err) {
@@ -84,7 +84,7 @@ class Orders {
     return p;
   }
 
-  async _create(body, input, { sample, createdAt }) {
+  async _create(body, input, { sample, createdAt, account }) {
     const q = this.pricing.quote({ items: body.items, shippingMethod: input.shippingMethod });
     if (!q.lines.length) throw new HttpError(400, 'Your cart is empty');
     // Never silently change what the customer agreed to: if the server had to
@@ -113,6 +113,7 @@ class Orders {
       orderStatus: 'draft',
       paymentStatus: 'unpaid',
       customer: input.customer,
+      account: account ? { id: account.id, email: account.email, name: account.name } : null,
       shipping: { ...input.shipping, method: q.shipping.method, methodLabel: q.shipping.label },
       lines: q.lines.map(({ key, ...l }) => l),
       totals: q.totals,

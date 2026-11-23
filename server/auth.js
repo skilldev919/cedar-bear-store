@@ -67,6 +67,17 @@ class Auth {
     return `${body}.${crypto.createHmac('sha256', this.key()).update(body).digest('base64url')}`;
   }
 
+  /** Signing secret for customer sessions: SESSION_SECRET, or a random secret generated once and stored. */
+  customerSecret() {
+    if (this.sessionSecret) return this.sessionSecret;
+    const data = this.src.read();
+    if (!data.customerSecret) {
+      data.customerSecret = crypto.randomBytes(32).toString('hex');
+      this.src.write(data);
+    }
+    return data.customerSecret;
+  }
+
   logAttempt(ip, ok) {
     const data = this.src.read();
     data.attempts = [{ ts: new Date().toISOString(), ip, ok }, ...(data.attempts || [])].slice(0, 50);

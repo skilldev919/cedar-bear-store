@@ -96,10 +96,18 @@ Without Redis, data lives in the function's temporary `/tmp` storage: it works f
 but is lost whenever Vercel recycles the instance. Add **Upstash for Redis** from the Vercel Marketplace
 (Project → Storage), connect it to the project and redeploy — the app picks up the variables automatically.
 
+## Customer accounts
+
+- The homepage (and About / Privacy / Terms) is public. Shop, product, offer, cart, checkout and order pages require a customer account — enforced in the browser **and** on the server (cart pricing, orders and confirmations return 401 without a login).
+- `/register` and `/login` (Register / Log In buttons top-right). Passwords: 8+ characters with a letter and a number, stored as per-user salted scrypt hashes; sessions are HMAC-signed HttpOnly cookies (30 days, signed with `SESSION_SECRET`); repeated wrong passwords are locked out for 15 minutes.
+- Visitors sent to the login page (e.g. from a TikTok campaign link) return to the page they wanted afterwards; campaign attribution is kept.
+- Checkout pre-fills the account name/email and orders are linked to the account. Admins see registered customers under **Admin → Customers**.
+
 ## Look & feel
 
 - Calm, static design: an original morning-lake illustration (`public/images/bg-fresh-lake.svg`) softened behind frosted-glass cards and header.
 - Page navigation is instant with no transition effects; only quiet hover feedback on cards and buttons.
+- The Register / Log In pages are animated: card entrance with a rotating glowing border, fields that slide in, floating labels, a sliding tab indicator, live password-strength meter, a shake on errors and a self-drawing success check.
 
 ## Known limitations (Phase 1)
 

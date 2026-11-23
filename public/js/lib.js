@@ -110,6 +110,7 @@ export async function api(path, { method = 'GET', body } = {}) {
   });
   let data = null;
   try { data = await res.json(); } catch { /* non-JSON */ }
+  if (res.status === 401 && data && data.loginRequired) window.dispatchEvent(new CustomEvent('cb:login-required'));
   if (!res.ok) throw new ApiError(res.status, data);
   return data;
 }
