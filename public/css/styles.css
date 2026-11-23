@@ -1076,12 +1076,12 @@ body::before {
 }
 
 /* ==== Launch loading screen ===================================================== */
-#intro { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: #ffd84d; transition: opacity .45s ease; }
+#intro { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; background: radial-gradient(circle at 50% 42%, #2c4f37 0%, #1f3a29 55%, #15291c 100%); transition: opacity .45s ease; }
 #intro.out { opacity: 0; pointer-events: none; }
 .intro-box { display: grid; justify-items: center; gap: 18px; }
-.intro-spinner { width: 72px; height: 72px; border-radius: 50%; box-shadow: 0 6px 18px rgba(150, 110, 0, .25); animation: introSpin 1.6s linear infinite; }
+.intro-spinner { width: 72px; height: 72px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(214, 190, 130, .45), 0 10px 28px rgba(0, 0, 0, .3); animation: introSpin 1.8s linear infinite; }
 .intro-spinner svg { display: block; width: 100%; height: 100%; }
-.intro-text { margin: 0; font-family: var(--sans); font-size: 1.25rem; font-weight: 700; letter-spacing: .06em; color: #5a4300; }
+.intro-text { margin: 0; font-family: var(--sans); font-size: .95rem; font-weight: 600; letter-spacing: .32em; text-transform: uppercase; color: #e9e1cc; }
 .intro-text span { animation: introDot 1.2s infinite; }
 .intro-text span:nth-child(2) { animation-delay: .2s; }
 .intro-text span:nth-child(3) { animation-delay: .4s; }

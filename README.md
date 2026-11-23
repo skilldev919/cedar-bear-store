@@ -110,7 +110,7 @@ but is lost whenever Vercel recycles the instance. Add **Upstash for Redis** fro
 ## Look & feel
 
 - Calm, static design: an original morning-lake illustration (`public/images/bg-fresh-lake.svg`) softened behind frosted-glass cards and header.
-- Launch loading screen (`public/js/intro.js`): on the first visit of a browser session, a small cloud spins in the centre of a yellow background with "Loading..." for 4 seconds, then the main page fades in.
+- Launch loading screen (`public/js/intro.js`): on the first visit of a browser session, a small cloud spins in the centre of a deep forest-green background with "Loading..." for 2.5 seconds, then the main page fades in.
 - Page navigation is instant with no transition effects; only quiet hover feedback on cards and buttons.
 - The Register / Log In pages are animated: card entrance with a rotating glowing border, fields that slide in, floating labels, a sliding tab indicator, live password-strength meter, a shake on errors and a self-drawing success check.
 
