@@ -16,7 +16,7 @@
       "discountValue": 20,
       "startsAt": "2026-11-01T00:00:00-08:00",
       "expiresAt": "2027-01-31T23:59:00-08:00",
-      "heroImage": "/images/products/kava-calm-botanical.webp",
+      "heroImage": "",
       "items": [
         { "productId": "kava-calm", "variantId": "60ml", "qty": 1, "note": "Relaxation & stress support (60 mL)" },
         { "productId": "chamomile-relaxer", "variantId": "60ml", "qty": 1, "note": "Gentle nervous-system support (60 mL)" },

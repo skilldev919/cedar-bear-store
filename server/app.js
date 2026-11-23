@@ -82,28 +82,28 @@ function createApp({ root = path.join(__dirname, '..'), dataDir, runtimeDir, adm
   on('POST', '/api/cart/quote', async ({ req }) => pricing.quote(await readJson(req)));
   on('POST', '/api/orders', async ({ req }) => {
     const order = await orders.create(await readJson(req));
-    return { orderId: order.id, token: order.token, order: orders.publicView(order.id, order.token) };
+    return { orderId: order.id, token: order.token, order: await orders.publicView(order.id, order.token) };
   });
-  on('GET', '/api/orders/:id', ({ params, url }) => ({ order: orders.publicView(params.id, url.searchParams.get('token')) }));
-  on('POST', '/api/events', async ({ req }) => { const e = events.record(await readJson(req)); return { ok: true, id: e.id }; });
+  on('GET', '/api/orders/:id', async ({ params, url }) => ({ order: await orders.publicView(params.id, url.searchParams.get('token')) }));
+  on('POST', '/api/events', async ({ req }) => { const e = await events.record(await readJson(req)); return { ok: true, id: e.id }; });
 
   // Admin auth
   on('POST', '/api/admin/login', async ({ req, res }) => {
     const body = await readJson(req);
-    res.setHeader('Set-Cookie', auth.login(req, body.password));
+    res.setHeader('Set-Cookie', await auth.login(req, body.password));
     return { ok: true };
   });
   on('POST', '/api/admin/logout', ({ req, res }) => { res.setHeader('Set-Cookie', auth.logout()); return { ok: true }; });
   on('GET', '/api/admin/me', ({ session }) => ({ ok: true, since: new Date(session.createdAt).toISOString() }), { admin: true });
 
   // Admin operations
-  on('GET', '/api/admin/dashboard', () => ({ kpis: reports.dashboard(orders.all(), events.all()) }), { admin: true });
-  on('GET', '/api/admin/orders', () => ({
-    orders: orders.all().slice().reverse().map(adminOrder), statuses: ORDER_STATUSES,
+  on('GET', '/api/admin/dashboard', async () => ({ kpis: reports.dashboard(await orders.all(), await events.all()) }), { admin: true });
+  on('GET', '/api/admin/orders', async () => ({
+    orders: (await orders.all()).slice().reverse().map(adminOrder), statuses: ORDER_STATUSES,
   }), { admin: true });
-  on('GET', '/api/admin/orders.csv', ({ url, res }) => {
+  on('GET', '/api/admin/orders.csv', async ({ url, res }) => {
     const ids = (url.searchParams.get('ids') || '').split(',').filter(Boolean);
-    const list = orders.all().filter((o) => !ids.length || ids.includes(o.id));
+    const list = (await orders.all()).filter((o) => !ids.length || ids.includes(o.id));
     res.writeHead(200, {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': `attachment; filename="cedar-bear-test-orders-${new Date().toISOString().slice(0, 10)}.csv"`,
@@ -111,20 +111,20 @@ function createApp({ root = path.join(__dirname, '..'), dataDir, runtimeDir, adm
     });
     res.end(reports.ordersCsv(list));
   }, { admin: true });
-  on('GET', '/api/admin/orders/:id', ({ params }) => {
-    const o = orders.get(params.id);
+  on('GET', '/api/admin/orders/:id', async ({ params }) => {
+    const o = await orders.get(params.id);
     if (!o) throw new HttpError(404, 'Order not found');
     const sid = o.attribution?.sessionId;
-    return { order: adminOrder(o), events: sid ? events.forSession(sid) : [] };
+    return { order: adminOrder(o), events: sid ? await events.forSession(sid) : [] };
   }, { admin: true });
   on('PATCH', '/api/admin/orders/:id', async ({ req, params }) => {
     const body = await readJson(req);
-    return { order: adminOrder(orders.setStatus(params.id, body.orderStatus)) };
+    return { order: adminOrder(await orders.setStatus(params.id, body.orderStatus)) };
   }, { admin: true });
-  on('GET', '/api/admin/events', ({ url }) => {
+  on('GET', '/api/admin/events', async ({ url }) => {
     const type = url.searchParams.get('type');
     const source = url.searchParams.get('source');
-    const all = events.all();
+    const all = await events.all();
     let list = all;
     if (type) list = list.filter((e) => e.type === type);
     if (source) list = list.filter((e) => e.source === source);
@@ -136,7 +136,13 @@ function createApp({ root = path.join(__dirname, '..'), dataDir, runtimeDir, adm
   on('GET', '/api/admin/offers', () => ({
     offers: offers.all().map((o) => ({ ...o, state: offers.publicView(o).state })),
     products: catalog.all().map((p) => ({ id: p.id, name: p.name, variants: p.variants.map((v) => ({ id: v.id, label: v.label })) })),
+    images: offers.imageLibrary(),
   }), { admin: true });
+  on('POST', '/api/admin/offers', async ({ req }) => {
+    const body = await readJson(req);
+    const o = offers.create(String(body.fromId || ''));
+    return { offer: { ...o, state: offers.publicView(o).state } };
+  }, { admin: true });
   on('PUT', '/api/admin/offers/:id', async ({ req, params }) => {
     const o = offers.update(params.id, await readJson(req));
     return { offer: { ...o, state: offers.publicView(o).state } };
@@ -150,7 +156,7 @@ function createApp({ root = path.join(__dirname, '..'), dataDir, runtimeDir, adm
   }, { admin: true });
   on('POST', '/api/admin/sessions/revoke', ({ res }) => { auth.revokeAll(); res.setHeader('Set-Cookie', auth.cookie('', 0)); return { ok: true }; }, { admin: true });
   on('POST', '/api/admin/sample-data', async () => ({ created: await reports.loadSampleData({ orders, events, offers }) }), { admin: true });
-  on('POST', '/api/admin/clear-test-data', () => { orders.clear(); events.clear(); return { ok: true }; }, { admin: true });
+  on('POST', '/api/admin/clear-test-data', async () => { await orders.clear(); await events.clear(); return { ok: true }; }, { admin: true });
 
   // ---- Static files + SPA fallback --------------------------------------
   const indexHtml = () => fs.readFileSync(path.join(publicDir, 'index.html'));

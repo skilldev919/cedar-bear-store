@@ -43,7 +43,7 @@ Tests: `npm test` (acceptance tests AT-01…AT-09 against a real server with iso
 ## Configuration (owner-editable, no code changes)
 
 - `data/products.json` — products, variants, prices (**integer cents; current prices are placeholders pending owner approval**), details, images.
-- `data/offers.json` — offers: copy, products, % discount, active/inactive, start/expiry, featured. Also editable in **Admin → Offer Configuration**.
+- `data/offers.json` — offers: copy, hero image, products + bundle quantities, % or fixed discount, active/inactive, start/expiry, featured. Also editable in **Admin → Offer Configuration**, where **Duplicate as new variation** creates further offer variations from the same landing-page template (PROMO-03; new variations start inactive).
 - `data/settings.json` — shipping methods, free-shipping threshold ($75, standard only), max quantity, auto-review rules.
 - Product images: `public/images/products/`.
 
@@ -68,7 +68,7 @@ public/js/     SPA: app.js (router), state.js (shared cart/session/tracking), pa
 - **States**: order `draft → awaiting-payment → test-completed | pending-review | canceled`;
   payment `unpaid → simulated`. `verified-paid` is reserved for a future verified webhook.
 - **Idempotency**: each checkout carries a key; double submits return the same `TEST-YYYY-NNNNN` order.
-- **Admin**: HttpOnly SameSite=Strict session cookie, 8 h lifetime, 5-failure / 15-min lockout,
+- **Admin**: HMAC-signed stateless session cookie (HttpOnly, SameSite=Strict, 8 h), 5-failure / 15-min lockout shared across instances,
   JSON-only POSTs, CSP + security headers, CSV formula-injection guard.
 
 ## Deploying to Vercel
@@ -81,10 +81,20 @@ The repo is Vercel-ready (`vercel.json`, `api/index.js`): `public/` is served fr
 | `ADMIN_PASSWORD` | yes | Admin portal password |
 | `SESSION_SECRET` | recommended | Long random string used to sign admin session cookies |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` (or `KV_REST_API_URL` / `KV_REST_API_TOKEN`) | recommended | Durable storage for orders, events, offer edits and the admin credential |
+| `APP_ENV` | optional | `test` (default). Any other value (e.g. `production`) uses a separate storage key space, keeping test and production data apart |
+| `STORE_PREFIX` | optional | Explicit storage key prefix (Preview deployments use `cedarbear:ci-test:` so they never touch live data) |
+
+With Redis, writes are atomic and safe across concurrent serverless instances: order numbers come from `INCR`, double-submits are blocked with `SET NX` idempotency keys, each order is its own key, events are appended to a list, and the admin login lockout counter is shared. Data stored in the earlier single-key format is migrated automatically on first use.
 
 Without Redis, data lives in the function's temporary `/tmp` storage: it works for a live walkthrough
 but is lost whenever Vercel recycles the instance. Add **Upstash for Redis** from the Vercel Marketplace
 (Project → Storage), connect it to the project and redeploy — the app picks up the variables automatically.
+
+## Look & feel
+
+- Soft morning-forest backdrop (`public/images/bg-forest-morning.svg`, original SVG) fixed behind all pages, with a slow drifting light glow and a frosted header.
+- Page transitions: the current page fades out and the next one rises in; card groups enter with a short stagger; sections below the fold reveal on scroll; hero bottles float gently.
+- All motion is disabled automatically for visitors whose system requests reduced motion.
 
 ## Known limitations (Phase 1)
 

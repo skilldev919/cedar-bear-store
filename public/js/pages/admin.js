@@ -286,14 +286,15 @@ const toLocalInput = (iso) => { if (!iso) return ''; const d = new Date(iso); re
 const STATE_PILL = { active: 'green', inactive: 'grey', expired: 'red', scheduled: 'orange' };
 
 async function offersView(main) {
-  const { offers, products } = await api('/api/admin/offers');
+  const { offers, products, images } = await api('/api/admin/offers');
   main.innerHTML = String(html`<div class="admin-head"><div><h1>Offer Configuration</h1><p class="muted">Change copy, products, discount and active/inactive status without touching checkout or product logic (PROMO-02, AT-08). Inactive or expired offers stay stored but are never shown or priced as active.</p></div></div>
+    <p class="muted small">${icon('layers')} New offer variations (PROMO-03) reuse the same landing-page template: use <b>Duplicate as new variation</b> on any offer, then edit and activate it.</p>
     ${offers.map((o) => html`<form class="panel offer-form" data-offer="${o.id}">
       <div class="panel-title"><h2>${o.name} <span class="spill spill-${STATE_PILL[o.state] || 'grey'}">${o.state}</span>${o.featured ? html` <span class="mini-tag">featured</span>` : ''}</h2>
         ${o.state === 'active' ? html`<a class="btn btn-outline btn-sm" href="/offer/${o.slug}" target="_blank" rel="noopener">${icon('external')} Preview</a>` : ''}</div>
       <div class="fields three">
         <div class="field"><label>Status</label><div class="select-wrap"><select name="status"><option value="active" ${o.status === 'active' ? 'selected' : ''}>Active</option><option value="inactive" ${o.status === 'inactive' ? 'selected' : ''}>Inactive</option></select>${icon('chevD')}</div></div>
-        <div class="field"><label>Discount (%)</label><input name="discountValue" type="number" min="1" max="90" step="1" value="${o.discountType === 'percent' ? o.discountValue : ''}" required></div>
+        <div class="field"><label>Discount</label><div class="pair"><div class="select-wrap"><select name="discountType" aria-label="Discount type"><option value="percent" ${o.discountType === 'percent' ? 'selected' : ''}>% off</option><option value="fixed" ${o.discountType === 'fixed' ? 'selected' : ''}>$ off each</option></select>${icon('chevD')}</div><input name="discountValue" type="number" min="0.01" step="0.01" aria-label="Discount amount" value="${o.discountType === 'fixed' ? (o.discountValue / 100).toFixed(2) : o.discountValue}" required></div></div>
         <div class="field check-field"><label><input type="checkbox" name="featured" ${o.featured ? 'checked' : ''}> Featured offer (home & nav)</label></div>
         <div class="field"><label>Starts</label><input name="startsAt" type="datetime-local" value="${toLocalInput(o.startsAt)}"></div>
         <div class="field"><label>Expires</label><input name="expiresAt" type="datetime-local" value="${toLocalInput(o.expiresAt)}"></div>
@@ -303,19 +304,23 @@ async function offersView(main) {
         <div class="field"><label>Source (id / label)</label><div class="pair"><input name="source" value="${o.source}" required pattern="[a-z0-9-]+"><input name="sourceLabel" value="${o.sourceLabel}" required maxlength="40"></div></div>
       </div>
       <div class="field"><label>Headline</label><input name="headline" value="${o.headline}" required maxlength="120"></div>
+      <div class="field"><label>Hero image</label><div class="select-wrap"><select name="heroImage"><option value="" ${!o.heroImage ? 'selected' : ''}>Bundle product bottles (default)</option>${images.map((src) => html`<option value="${src}" ${o.heroImage === src ? 'selected' : ''}>${src.split('/').pop()}</option>`)}</select>${icon('chevD')}</div></div>
       <div class="field"><label>Sub-headline</label><textarea name="subheadline" rows="2" required maxlength="240">${o.subheadline}</textarea></div>
       <fieldset class="field"><legend>Bundle products</legend><div class="prod-picks">${products.map((p) => { const it = o.items.find((i) => i.productId === p.id); return html`<label class="pick"><input type="checkbox" name="item" value="${p.id}" ${it ? 'checked' : ''}><b>${p.name}</b>
-        <span class="select-wrap"><select name="variant-${p.id}" aria-label="${p.name} variant">${p.variants.map((v) => html`<option value="${v.id}" ${it?.variantId === v.id ? 'selected' : ''}>${v.label}</option>`)}</select>${icon('chevD')}</span></label>`; })}</div></fieldset>
-      <div class="form-actions"><span class="form-msg" aria-live="polite"></span><button class="btn btn-primary" type="submit">${icon('check')} Save offer</button></div>
+        <span class="select-wrap"><select name="variant-${p.id}" aria-label="${p.name} variant">${p.variants.map((v) => html`<option value="${v.id}" ${it?.variantId === v.id ? 'selected' : ''}>${v.label}</option>`)}</select>${icon('chevD')}</span>
+        <span class="qty-pick">Qty <input type="number" name="qty-${p.id}" min="1" max="5" value="${it?.qty || 1}" aria-label="${p.name} quantity"></span></label>`; })}</div></fieldset>
+      <div class="form-actions"><span class="form-msg" aria-live="polite"></span><button class="btn btn-outline" type="button" data-duplicate="${o.id}">${icon('copy')} Duplicate as new variation</button><button class="btn btn-primary" type="submit">${icon('check')} Save offer</button></div>
     </form>`)}`);
 
   main.querySelectorAll('[data-offer]').forEach((form) => form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(form);
     const msg = form.querySelector('.form-msg');
-    const items = fd.getAll('item').map((pid) => ({ productId: pid, variantId: fd.get(`variant-${pid}`), qty: 1 }));
+    const items = fd.getAll('item').map((pid) => ({ productId: pid, variantId: fd.get(`variant-${pid}`), qty: Number(fd.get(`qty-${pid}`)) || 1 }));
+    const dType = fd.get('discountType');
+    const dRaw = Number(fd.get('discountValue'));
     const body = {
-      status: fd.get('status'), featured: fd.get('featured') === 'on', discountType: 'percent', discountValue: Number(fd.get('discountValue')),
+      status: fd.get('status'), featured: fd.get('featured') === 'on', discountType: dType, discountValue: dType === 'fixed' ? Math.round(dRaw * 100) : dRaw, heroImage: fd.get('heroImage'),
       startsAt: fd.get('startsAt') ? new Date(fd.get('startsAt')).toISOString() : null,
       expiresAt: fd.get('expiresAt') ? new Date(fd.get('expiresAt')).toISOString() : null,
       slug: fd.get('slug'), name: fd.get('name'), campaign: fd.get('campaign'), source: fd.get('source'), sourceLabel: fd.get('sourceLabel'),
@@ -327,6 +332,14 @@ async function offersView(main) {
       toast('Offer saved — storefront updated');
       await offersView(main);
     } catch (ex) { msg.textContent = ex.message; msg.className = 'form-msg err'; }
+  }));
+  main.querySelectorAll('[data-duplicate]').forEach((b) => b.addEventListener('click', async () => {
+    try {
+      const { offer } = await api('/api/admin/offers', { method: 'POST', body: { fromId: b.dataset.duplicate } });
+      toast(`Created ${offer.name} (inactive) — edit and activate it below`);
+      await offersView(main);
+      main.querySelector(`[data-offer="${offer.id}"]`)?.scrollIntoView({ behavior: 'smooth' });
+    } catch (ex) { toast(ex.message, { tone: 'info' }); }
   }));
 }
 
@@ -345,7 +358,7 @@ async function securityView(main) {
           <span class="form-msg" aria-live="polite"></span>
           <button class="btn btn-primary btn-sm" type="submit">Update password</button>
         </form>
-        ${s.credentialSource === 'env' ? html`<p class="muted small">Note: ADMIN_PASSWORD is set, so the environment value will apply again after a restart.</p>` : ''}
+        ${s.credentialSource === 'env' ? html`<p class="muted small">Currently using the ADMIN_PASSWORD environment variable. A password set here replaces it and signs out all sessions.</p>` : ''}
       </section>
       <section class="panel"><h2>${icon('flask')} Demo Data</h2>
         <p class="muted">Sample orders are created through the real pricing and order pipeline and are tagged “sample”. Clearing removes all test orders and events (order numbering continues).</p>

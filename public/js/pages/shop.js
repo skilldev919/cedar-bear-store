@@ -56,7 +56,7 @@ export default async function shop(root, { query }) {
     const showOfferCard = bundles && offer && (!q || offer.name.toLowerCase().includes(q) || offer.items.some((i) => i.name.toLowerCase().includes(q)));
     const cards = list.map((p) => productCard(p, { showDesc: true, preset: bundles ? p.variants.find((v) => v.isBundle).id : undefined }));
     grid.innerHTML = String(html`${showOfferCard ? html`<article class="pcard pcard-offer">
-        <a class="pcard-img" href="${offer.url}"><img src="${offer.heroImage}" alt="${offer.name}" loading="lazy"></a>
+        <a class="pcard-img" href="${offer.url}"><img src="${offer.heroImage || offer.items[0].image.src}" alt="${offer.name}" loading="lazy"></a>
         <div class="pcard-body"><span class="tag tag-offer">${icon('tag')} Campaign bundle</span><h3><a href="${offer.url}">${offer.name}</a></h3>
           <div class="pcard-price"><span class="price">${money(offer.offerTotal)}</span><s>${money(offer.regularTotal)}</s></div>
           <p class="pcard-desc">${offer.items.length} formulas · ${offerBadge(offer)} for a limited time.</p>

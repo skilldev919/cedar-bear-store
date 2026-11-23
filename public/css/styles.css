@@ -635,6 +635,10 @@ fieldset.field { border: 0; padding: 0; margin: 0; }
 .pick { display: grid; gap: 8px; border: 1.5px solid var(--line); border-radius: 12px; padding: 10px 12px; background: #fff; font-weight: 500 !important; grid-template-columns: auto 1fr; align-items: center; }
 .pick input { width: 18px !important; height: 18px; accent-color: var(--green-800); }
 .pick .select-wrap { grid-column: 1 / -1; }
+.qty-pick { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--muted); }
+.qty-pick input { width: 70px !important; padding: 6px 8px !important; }
+.hero-products.single .hp { height: 300px; margin: 0; }
+.form-actions { flex-wrap: wrap; }
 .pick select { padding: 7px 34px 7px 10px; font-size: .92rem; }
 .form-actions { display: flex; justify-content: flex-end; align-items: center; gap: 14px; }
 .form-msg.err { color: var(--red); font-weight: 600; }
@@ -878,4 +882,62 @@ fieldset.field { border: 0; padding: 0; margin: 0; }
   /* Shop/home cards: compact like the mockups (no description) */
   .pcard-desc { display: none; }
   .page-top { padding-top: 14px; }
+}
+
+/* ==== Background & motion ==================================================== */
+/* Gentle, refreshing backdrop: fixed layer so it stays put while content scrolls (works on iOS too). */
+body { background: var(--paper); }
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: url('/images/bg-forest-morning.svg') center bottom / cover no-repeat;
+  opacity: .9;
+}
+body::after { /* soft drifting light, very subtle */
+  content: ''; position: fixed; z-index: -1; pointer-events: none; width: 70vmax; height: 70vmax; right: -20vmax; top: -30vmax; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 248, 222, .55) 0%, rgba(255, 248, 222, 0) 65%);
+  animation: glow 14s ease-in-out infinite alternate;
+}
+@keyframes glow { from { transform: translate(0, 0) scale(1); opacity: .8; } to { transform: translate(-6vmax, 4vmax) scale(1.08); opacity: 1; } }
+/* Frosted header so the backdrop shows through softly */
+#site-header { background: rgba(246, 240, 228, .86); backdrop-filter: saturate(140%) blur(10px); -webkit-backdrop-filter: saturate(140%) blur(10px); }
+.hero, .offer-hero, .cart-hero, .confirm-hero { background: transparent; }
+
+/* Page transition: content fades and rises in on every navigation */
+.page-enter { animation: pageIn .55s cubic-bezier(.2, .7, .2, 1) both; }
+.page-leave { animation: pageOut .16s ease-in both; }
+@keyframes pageIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes pageOut { to { opacity: 0; transform: translateY(-6px); } }
+
+/* Staggered entrance for card groups */
+.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products) > * { animation: rise .6s cubic-bezier(.2, .7, .2, 1) both; }
+.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products) > :nth-child(1) { animation-delay: .08s; }
+.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products) > :nth-child(2) { animation-delay: .14s; }
+.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products) > :nth-child(3) { animation-delay: .2s; }
+.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products) > :nth-child(4) { animation-delay: .26s; }
+.page-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products) > :nth-child(n+5) { animation-delay: .32s; }
+@keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+/* Hero copy slides in; product bottles drift gently */
+.page-enter :is(.hero-copy, .offer-copy, .confirm-card) > * { animation: rise .7s cubic-bezier(.2, .7, .2, 1) both; }
+.page-enter :is(.hero-copy, .offer-copy) > :nth-child(2) { animation-delay: .08s; }
+.page-enter :is(.hero-copy, .offer-copy) > :nth-child(3) { animation-delay: .16s; }
+.page-enter :is(.hero-copy, .offer-copy) > :nth-child(n+4) { animation-delay: .22s; }
+.hero-products .hp { animation: float 7s ease-in-out infinite; }
+.hero-products .hp-1 { animation-delay: -2.3s; } .hero-products .hp-2 { animation-delay: -4.6s; }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+.burst { animation: pop .7s .25s cubic-bezier(.2, 1.4, .4, 1) both; }
+@keyframes pop { from { opacity: 0; transform: rotate(-8deg) scale(.6); } to { opacity: 1; transform: rotate(-8deg) scale(1); } }
+
+/* Sections further down reveal softly as they scroll into view */
+.reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s ease, transform .7s cubic-bezier(.2, .7, .2, 1); }
+.reveal.in { opacity: 1; transform: none; }
+
+/* Hover lift on interactive cards */
+.pcard, .info-card, .kpi, .bundle-row, .about-p { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.pcard:hover, .about-p:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(40, 60, 30, .12); }
+.btn-primary:hover, .btn-terra:hover { box-shadow: 0 6px 16px rgba(40, 60, 30, .18); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .reveal { opacity: 1; transform: none; }
 }

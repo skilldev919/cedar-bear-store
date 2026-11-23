@@ -127,15 +127,15 @@ test('AT-02 + AT-06: campaign offer → shared cart → exactly one marked test 
   assert.equal(o.supplierDispatch, false);
   assert.equal(o.payment.capturedCents, 0);
   assert.equal(o.totals.totalCents, 3490 + 2792 + 2392 + 2632);
-  assert.equal(app.orders.all().filter((x) => x.idempotencyKey === body.idempotencyKey).length, 1);
+  assert.equal((await app.orders.all()).filter((x) => x.idempotencyKey === body.idempotencyKey).length, 1);
   // Confirmation needs the secret token
   assert.equal((await call(`/api/orders/${o.id}`)).status, 404);
   assert.equal((await call(`/api/orders/${o.id}?token=wrong`)).status, 404);
   assert.equal((await call(`/api/orders/${o.id}?token=${a.json.token}`)).status, 200);
   // Completion event recorded server-side with attribution
-  const ev = app.events.forSession('session-test-0002').map((e) => e.type);
+  const ev = (await app.events.forSession('session-test-0002')).map((e) => e.type);
   assert.deepEqual(ev, ['landing_visit', 'checkout_start', 'simulated_completion']);
-  assert.equal(app.orders.get(o.id).attribution.source, 'tiktok');
+  assert.equal((await app.orders.get(o.id)).attribution.source, 'tiktok');
 });
 
 test('CHK-01: checkout input validation', async () => {
@@ -216,4 +216,45 @@ test('security: static path traversal and non-JSON posts are refused', async () 
   assert.notEqual((await call('/..%2fdata%2fruntime%2fauth.json')).status, 200);
   const r = await fetch(`${base}/api/orders`, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'a=1' });
   assert.equal(r.status, 415);
+});
+
+test('AT-06 (concurrency): simultaneous checkouts get unique order numbers and none are lost', async () => {
+  const before = (await app.orders.all()).length;
+  const items = [{ productId: 'chamomile-relaxer', variantId: '60ml', qty: 1 }];
+  const rs = await Promise.all(Array.from({ length: 12 }, () => call('/api/orders', { method: 'POST', body: checkout(items) })));
+  assert.ok(rs.every((r) => r.status === 200));
+  const ids = rs.map((r) => r.json.orderId);
+  assert.equal(new Set(ids).size, 12, 'all order IDs unique');
+  assert.equal((await app.orders.all()).length, before + 12, 'no order overwritten');
+});
+
+test('PROMO-02/03: offer variations, imagery, fixed discounts and bundle quantities are configurable', async () => {
+  const cookie = await login();
+  const created = await call('/api/admin/offers', { method: 'POST', body: { fromId: 'calm-balance-tiktok' }, cookie });
+  assert.equal(created.status, 200);
+  const v = created.json.offer;
+  assert.equal(v.status, 'inactive');
+  assert.notEqual(v.slug, 'calm-and-balance');
+  assert.equal((await call(`/api/offers/${v.slug}`)).status, 404, 'new variation hidden until activated');
+  const lib = (await call('/api/admin/offers', { cookie })).json.images;
+  assert.ok(lib.length >= 6);
+  assert.equal((await call(`/api/admin/offers/${v.id}`, { method: 'PUT', body: { heroImage: 'https://evil.example/x.png' }, cookie })).status, 400);
+  const upd = await call(`/api/admin/offers/${v.id}`, { method: 'PUT', cookie, body: {
+    status: 'active', heroImage: lib[1], discountType: 'fixed', discountValue: 500,
+    startsAt: '2020-01-01T00:00:00Z', expiresAt: '2099-01-01T00:00:00Z',
+    items: [{ productId: 'kava-calm', variantId: 'duo', qty: 2 }],
+  } });
+  assert.equal(upd.status, 200);
+  const pub = (await call(`/api/offers/${v.slug}`)).json.offer;
+  assert.equal(pub.heroImage, lib[1]);
+  assert.equal(pub.items[0].qty, 2);
+  assert.equal(pub.items[0].offerCents, 5990 - 500);
+  const q = (await call('/api/cart/quote', { method: 'POST', body: { items: [{ productId: 'kava-calm', variantId: 'duo', qty: 2, offerId: v.id }] } })).json;
+  assert.equal(q.totals.discountCents, 1000);
+});
+
+test('Admin lockout: repeated wrong passwords are blocked (429)', async () => {
+  let last;
+  for (let i = 0; i < 6; i++) last = await call('/api/admin/login', { method: 'POST', body: { password: `wrong-${i}` } });
+  assert.equal(last.status, 429);
 });

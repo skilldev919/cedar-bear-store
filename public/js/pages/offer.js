@@ -46,7 +46,7 @@ export default async function offerPage(root, { params, query }) {
       </div>
       <div class="offer-art">
         <span class="burst">${offer.discountType === 'percent' ? html`<b>${offer.discountValue}%</b><span>OFF</span>` : html`<b>${money(offer.discountValue)}</b><span>OFF</span>`}</span>
-        ${heroProducts(offer.items.map((i) => i.image.src))}
+        ${offer.heroImage ? html`<div class="hero-products single"><img class="hp" src="${offer.heroImage}" alt="${offer.name}"><div class="stone"></div></div>` : heroProducts(offer.items.map((i) => i.image.src))}
       </div>
     </div>
   </section>

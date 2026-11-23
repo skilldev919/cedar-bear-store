@@ -54,10 +54,37 @@ function footer() {
   <p class="disclaimer">Phase 1 demonstration — no real payments are collected and no orders are dispatched. These statements have not been evaluated by the Food and Drug Administration. This product is not intended to diagnose, treat, cure, or prevent any disease.</p>`);
 }
 
+const reduceMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 export async function navigate(path, { replace = false } = {}) {
+  const main = $('#main');
+  // Brief fade-out of the current page before the next one rises in.
+  if (!replace && !reduceMotion() && main.children.length) {
+    main.classList.remove('page-enter');
+    main.classList.add('page-leave');
+    await new Promise((r) => setTimeout(r, 150));
+  }
   if (replace) history.replaceState({}, '', path); else history.pushState({}, '', path);
-  await render();
   window.scrollTo(0, 0);
+  await render();
+}
+
+/** Entrance animation for the freshly rendered page + soft reveal of sections below the fold. */
+let revealObserver;
+function animatePage(main) {
+  main.classList.remove('page-leave', 'page-enter');
+  if (reduceMotion()) return;
+  void main.offsetWidth; // restart the CSS animation
+  main.classList.add('page-enter');
+  setTimeout(() => main.classList.remove('page-enter'), 1200);
+  if (!('IntersectionObserver' in window)) return;
+  revealObserver?.disconnect();
+  revealObserver = new IntersectionObserver((entries) => entries.forEach((en) => {
+    if (en.isIntersecting) { en.target.classList.add('in'); revealObserver.unobserve(en.target); }
+  }), { rootMargin: '0px 0px -8% 0px' });
+  const fold = window.innerHeight;
+  main.querySelectorAll('.section, .section-tight, .info-cards, .offer-grid, .testimonials, .config-note, .confirm-cols, .explain, .details-grid, .cart-actions, .about-products, .how')
+    .forEach((el) => { if (el.getBoundingClientRect().top > fold) { el.classList.add('reveal'); revealObserver.observe(el); } });
 }
 export const refreshHeader = () => header();
 
@@ -72,6 +99,7 @@ async function render() {
   header();
   if (!route) {
     setTitle('Page not found');
+    main.classList.remove('page-leave');
     main.innerHTML = String(html`<section class="container narrow center pad-xl"><h1>Page not found</h1><p>We couldn't find that page.</p><a class="btn btn-primary" href="/">${icon('arrowL')} Back to Store</a></section>`);
     return;
   }
@@ -83,9 +111,11 @@ async function render() {
     if (token !== navToken) return;
     main.innerHTML = '';
     await mod.default(main, { params, arg: route.arg, query: new URLSearchParams(location.search), isStale: () => token !== navToken });
+    if (token === navToken) animatePage(main);
   } catch (err) {
     console.error(err);
     if (token !== navToken) return;
+    main.classList.remove('page-leave');
     main.innerHTML = String(html`<section class="container narrow center pad-xl"><h1>Something went wrong</h1><p>${err.message || 'Please try again.'}</p><a class="btn btn-primary" href="/">Back to Store</a></section>`);
   }
 }

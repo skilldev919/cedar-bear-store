@@ -9,7 +9,9 @@ const path = require('path');
 
 const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL || '';
 const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN || '';
-const PREFIX = process.env.STORE_PREFIX || 'cedarbear:';
+// Test and future production data are logically separated: APP_ENV=production uses its own key space.
+const APP_ENV = (process.env.APP_ENV || 'test').toLowerCase();
+const PREFIX = process.env.STORE_PREFIX || (APP_ENV === 'test' ? 'cedarbear:' : `cedarbear:${APP_ENV}:`);
 const remoteEnabled = Boolean(REDIS_URL && REDIS_TOKEN);
 const registry = [];
 
@@ -78,4 +80,14 @@ async function flush() {
   stores.forEach((s) => { s.dirty = false; });
 }
 
-module.exports = { JsonFile, syncIn, flush, remoteEnabled };
+/** Single Redis command (or a pipeline when given an array of commands). */
+const str = (cmd) => cmd.map(String);
+async function redisCmd(...cmd) { return (await redis(str(cmd))).result; }
+async function redisPipe(cmds) {
+  const out = await redis(cmds.map(str), true);
+  const failed = out.find((r) => r.error);
+  if (failed) throw new Error(`Redis error: ${failed.error}`);
+  return out.map((r) => r.result);
+}
+
+module.exports = { JsonFile, syncIn, flush, remoteEnabled, redisCmd, redisPipe, PREFIX };

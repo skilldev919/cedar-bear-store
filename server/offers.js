@@ -60,6 +60,23 @@ class Offers {
     };
   }
 
+  imageLibrary() { return this.catalog.all().flatMap((p) => p.images.map((i) => i.src)); }
+
+  /** PROMO-03: new offer variations are created from the reusable template (a copy of an existing offer), inactive until edited. */
+  create(fromId) {
+    const data = this.src.read();
+    const base = data.offers.find((o) => o.id === fromId);
+    if (!base) throw new HttpError(404, 'Template offer not found');
+    if (data.offers.length >= 20) throw new HttpError(400, 'Offer limit reached (20)');
+    let n = 2;
+    while (data.offers.some((o) => o.slug === `${base.slug}-${n}` || o.id === `${base.id}-${n}`)) n += 1;
+    const offer = { ...structuredClone(base), id: `${base.id}-${n}`, slug: `${base.slug}-${n}`, name: `${base.name} (variation ${n})`,
+      status: 'inactive', featured: false, testimonials: [] };
+    data.offers.push(offer);
+    this.src.write(data);
+    return offer;
+  }
+
   /** Admin update — validated so a bad edit can never produce an invalid discount. */
   update(id, patch) {
     const data = this.src.read();
@@ -86,6 +103,11 @@ class Offers {
       next.status = patch.status;
     }
     if (patch.featured !== undefined) next.featured = Boolean(patch.featured);
+    if (patch.heroImage !== undefined) {
+      // Imagery is chosen from the owner-supplied asset library ('' = show the bundle's product bottles).
+      if (patch.heroImage !== '' && !this.imageLibrary().includes(patch.heroImage)) throw new HttpError(400, 'Choose an image from the product library');
+      next.heroImage = patch.heroImage;
+    }
     if (patch.discountType !== undefined) {
       if (!['percent', 'fixed'].includes(patch.discountType)) throw new HttpError(400, 'Invalid discount type');
       next.discountType = patch.discountType;

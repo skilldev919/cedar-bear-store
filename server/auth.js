@@ -8,6 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const { JsonFile } = require('./store');
 const { HttpError, parseCookies, clientIp } = require('./http');
+const { failCounter } = require('./repos');
 
 const COOKIE = 'cb_admin';
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
@@ -72,17 +73,20 @@ class Auth {
     this.src.write(data);
   }
 
-  login(req, password) {
+  async login(req, password) {
     const ip = clientIp(req);
     const now = Date.now();
+    // Failure counting is shared across instances when Redis is configured.
     const f = (this.fails.get(ip) || []).filter((t) => now - t < WINDOW_MS);
-    if (f.length >= MAX_FAILS) throw new HttpError(429, 'Too many failed attempts. Try again in 15 minutes.');
+    const failures = failCounter ? await failCounter.count(ip) : f.length;
+    if (failures >= MAX_FAILS) throw new HttpError(429, 'Too many failed attempts. Try again in 15 minutes.');
     if (!this.verify(password)) {
-      f.push(now);
-      this.fails.set(ip, f);
+      if (failCounter) await failCounter.add(ip, WINDOW_MS / 1000);
+      else { f.push(now); this.fails.set(ip, f); }
       this.logAttempt(ip, false);
       throw new HttpError(401, 'Incorrect password');
     }
+    if (failCounter) await failCounter.reset(ip);
     this.fails.delete(ip);
     this.logAttempt(ip, true);
     const token = this.sign({ iat: now, exp: now + SESSION_TTL_MS, ip, e: this.src.read().epoch || 0 });

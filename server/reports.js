@@ -112,10 +112,10 @@ async function loadSampleData({ orders, events, offers }) {
     evs.push(['product_view', 1, `Viewed ${items[0].productId.replace(/-/g, ' ')}`, `/product/${items[0].productId}`]);
     evs.push(['add_to_cart', 3, `Added ${items.length} item(s) to cart`, '/cart']);
     evs.push(['checkout_start', 5, 'Started simulated checkout', '/checkout']);
-    evs.forEach(([type, min, label, path]) => {
-      const e = events.record({ type, sessionId, source, campaign: useOffer ? offer.campaign : null, offerId: useOffer ? offer.id : null, productId: items[0].productId, path, label });
-      e.ts = new Date(t0 + min * 60000).toISOString();
-    });
+    for (const [type, min, label, path] of evs) {
+      await events.record({ type, sessionId, source, campaign: useOffer ? offer.campaign : null, offerId: useOffer ? offer.id : null,
+        productId: items[0].productId, path, label, ts: new Date(t0 + min * 60000).toISOString() }, { server: true });
+    }
     const order = await orders.create({
       items, sessionId,
       customer: { name, email: `${name.split(' ')[0].toLowerCase()}.sample@cedarbear.demo` },
@@ -125,19 +125,19 @@ async function loadSampleData({ orders, events, offers }) {
       idempotencyKey: `sample-${crypto.randomUUID()}`,
       attribution: { source, campaign: useOffer ? offer.campaign : null },
     }, { sample: true, createdAt: new Date(t0 + 7 * 60000).toISOString() });
-    events.record({ type: 'simulated_completion', sessionId, source, campaign: order.attribution.campaign, offerId: order.attribution.offerIds[0] || null,
-      path: `/order/confirmation/${order.id}`, label: `Completed demo order ${order.id} (no real payment)`, orderId: order.id }, { server: true })
-      .ts = new Date(t0 + 7 * 60000).toISOString();
+    await events.record({ type: 'simulated_completion', sessionId, source, campaign: order.attribution.campaign, offerId: order.attribution.offerIds[0] || null,
+      path: `/order/confirmation/${order.id}`, label: `Completed demo order ${order.id} (no real payment)`, orderId: order.id,
+      ts: new Date(t0 + 7 * 60000).toISOString() }, { server: true });
     created.push(order.id);
   }
   // One abandoned checkout so the conversion rate is realistic.
   const sid = `sample-${crypto.randomBytes(6).toString('hex')}`;
-  ['landing_visit', 'product_view', 'add_to_cart', 'checkout_start'].forEach((type, k) => {
-    events.record({ type, sessionId: sid, source: 'direct', productId: 'kava-calm', path: '/', label: k === 3 ? 'Started simulated checkout' : 'Sample session' })
-      .ts = new Date(Date.now() - 5 * 3600000 + k * 60000).toISOString();
-  });
-  events.src.write();
-  if (created.length) orders.setStatus(created[created.length - 1], 'canceled', 'sample data');
+  const types = ['landing_visit', 'product_view', 'add_to_cart', 'checkout_start'];
+  for (let k = 0; k < types.length; k++) {
+    await events.record({ type: types[k], sessionId: sid, source: 'direct', productId: 'kava-calm', path: '/', label: k === 3 ? 'Started simulated checkout' : 'Sample session',
+      ts: new Date(Date.now() - 5 * 3600000 + k * 60000).toISOString() }, { server: true });
+  }
+  if (created.length) await orders.setStatus(created[created.length - 1], 'canceled', 'sample data');
   return created;
 }
 
