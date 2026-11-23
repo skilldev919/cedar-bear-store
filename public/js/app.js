@@ -67,14 +67,18 @@ function fxLayer() {
   return el;
 }
 
-/** Light sweep + (full motion) ring and burst of sparkles, leaves and petals from the click point. */
+/** Light burst from the click point: a bright core, beams radiating in all directions and a bloom of
+ *  light that covers the screen, plus (full motion) a scatter of sparkles, leaves and petals. */
 function fxBurst(x, y, full) {
   const layer = fxLayer();
   layer.innerHTML = '';
+  layer.style.setProperty('--fx-x', `${Math.round(x)}px`);
+  layer.style.setProperty('--fx-y', `${Math.round(y)}px`);
   const add = (cls, css) => { const d = document.createElement('div'); d.className = cls; Object.assign(d.style, css); layer.append(d); return d; };
-  add('fx-sweep', {});
+  add('fx-flash', {});
+  add('fx-rays', {});
+  add('fx-core', {});
   if (full) {
-    add('fx-ring', { left: `${x}px`, top: `${y}px` });
     const kinds = ['spark', 'spark', 'leaf', 'petal', 'spark', 'leaf'];
     for (let i = 0; i < 34; i++) {
       const a = (Math.PI * 2 * i) / 34 + Math.random() * 0.4;
@@ -88,7 +92,7 @@ function fxBurst(x, y, full) {
     }
   }
   clearTimeout(fxBurst.timer);
-  fxBurst.timer = setTimeout(() => { layer.innerHTML = ''; }, 1700);
+  fxBurst.timer = setTimeout(() => { layer.innerHTML = ''; }, 1500);
 }
 
 /** Floating bokeh lights behind the content (decorative). */
@@ -131,7 +135,7 @@ async function transition(update) {
   if (main.children.length) {
     main.classList.remove('page-enter');
     main.classList.add('page-leave');
-    await new Promise((r) => setTimeout(r, 170));
+    await new Promise((r) => setTimeout(r, 420)); // swap pages while the light covers the screen
   }
   await update();
 }

@@ -1026,3 +1026,65 @@ body::before {
     background: linear-gradient(180deg, rgba(255, 253, 246, .82) 0%, rgba(255, 253, 246, .62) 60%, rgba(255, 253, 246, .2) 100%);
   }
 }
+
+/* ==== Light-burst page transition ============================================
+   Click → light blooms from the click point with beams radiating in all directions →
+   old page brightens and dissolves into the light → light recedes → new page emerges.
+   A single soft bloom (no strobing). These rules override the earlier circle reveal. */
+.fx-flash { position: absolute; left: var(--fx-x, 50%); top: var(--fx-y, 40%); width: 300vmax; height: 300vmax; margin: -150vmax 0 0 -150vmax; border-radius: 50%;
+  background: radial-gradient(circle, #ffffff 0%, rgba(255, 253, 240, .98) 22%, rgba(255, 249, 226, .96) 50%, rgba(246, 252, 240, .93) 80%, rgba(255, 255, 255, 0) 100%);
+  animation: lightBloom 1.15s cubic-bezier(.3, .6, .2, 1) both; }
+@keyframes lightBloom { 0% { transform: scale(0); opacity: 1; } 38% { transform: scale(1); opacity: 1; } 55% { opacity: .96; } 100% { transform: scale(1.12); opacity: 0; } }
+.fx-rays { position: absolute; left: var(--fx-x, 50%); top: var(--fx-y, 40%); width: 260vmax; height: 260vmax; margin: -130vmax 0 0 -130vmax; border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, rgba(255, 244, 200, 0) 0deg 6deg, rgba(255, 246, 210, .85) 8.5deg, rgba(255, 244, 200, 0) 11deg 15deg);
+  -webkit-mask: radial-gradient(circle, #000 0%, #000 22%, rgba(0, 0, 0, .55) 45%, transparent 68%);
+          mask: radial-gradient(circle, #000 0%, #000 22%, rgba(0, 0, 0, .55) 45%, transparent 68%);
+  animation: lightRays 1.25s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes lightRays { 0% { transform: scale(.05) rotate(0deg); opacity: 0; } 12% { opacity: 1; } 55% { opacity: .9; } 100% { transform: scale(1.2) rotate(28deg); opacity: 0; } }
+.fx-core { position: absolute; left: var(--fx-x, 50%); top: var(--fx-y, 40%); width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%;
+  background: #fff; box-shadow: 0 0 40px 18px rgba(255, 246, 200, .95), 0 0 120px 60px rgba(255, 238, 170, .6);
+  animation: lightCore .7s ease-out both; }
+@keyframes lightCore { 0% { transform: scale(.2); opacity: 0; } 25% { transform: scale(1.4); opacity: 1; } 100% { transform: scale(4); opacity: 0; } }
+
+/* View Transitions timing: old page dissolves into the light, new page appears as the light recedes */
+::view-transition-old(root) { animation: dissolveOld .5s cubic-bezier(.4, 0, .6, 1) both; }
+::view-transition-new(root) { animation: emergeNew .75s .42s cubic-bezier(.2, .7, .2, 1) both; mix-blend-mode: normal; }
+@keyframes dissolveOld { to { opacity: 0; transform: scale(1.035); filter: brightness(1.7) saturate(.6) blur(3px); } }
+@keyframes emergeNew { from { opacity: 0; transform: scale(.975); filter: brightness(1.45) blur(5px); } to { opacity: 1; transform: none; filter: none; } }
+/* The light covers the header too; keep it in the same dissolve as the page */
+::view-transition-group(topbar), ::view-transition-group(site-header) { animation: none; }
+::view-transition-old(topbar), ::view-transition-old(site-header) { animation: dissolveOld .5s cubic-bezier(.4, 0, .6, 1) both; }
+::view-transition-new(topbar), ::view-transition-new(site-header) { animation: emergeNew .6s .45s ease-out both; }
+
+/* Content cascade starts once the new page emerges from the light */
+.vt-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(1) { animation-delay: .55s; }
+.vt-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(2) { animation-delay: .63s; }
+.vt-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(3) { animation-delay: .71s; }
+.vt-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(4) { animation-delay: .79s; }
+.vt-enter :is(.features, .pgrid, .kpis, .info-cards, .highlights, .funnel, .equation, .cc-status, .about-products, .sum-lines, .bundle-contents ul) > :nth-child(n+5) { animation-delay: .87s; }
+.vt-enter :is(.hero-copy, .offer-copy, .confirm-card, .shop-head > div, .co-head, .admin-head) > * { animation-delay: .45s; }
+.vt-enter :is(.hero-copy, .offer-copy, .confirm-card) > :nth-child(2) { animation-delay: .55s; }
+.vt-enter :is(.hero-copy, .offer-copy, .confirm-card) > :nth-child(3) { animation-delay: .65s; }
+.vt-enter :is(.hero-copy, .offer-copy, .confirm-card) > :nth-child(n+4) { animation-delay: .72s; }
+.vt-enter .hero-products .hp { animation-delay: .5s, 1.6s; }
+.vt-enter .hero-products .hp-1 { animation-delay: .62s, 2s; }
+.vt-enter .hero-products .hp-2 { animation-delay: .74s, 2.4s; }
+
+/* Fallback (no View Transitions): page dissolves while the light covers it */
+.page-leave { animation: dissolvePage .38s ease-in both; }
+@keyframes dissolvePage { to { opacity: 0; filter: brightness(1.6) blur(3px); transform: scale(1.02); } }
+.page-enter { animation: emergePage .7s .05s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes emergePage { from { opacity: 0; filter: brightness(1.4) blur(5px); transform: scale(.975); } to { opacity: 1; filter: none; transform: none; } }
+
+/* Reduced motion: the light still blooms and the pages cross-fade, but nothing spins, scales or flies */
+@media (prefers-reduced-motion: reduce) {
+  .fx-rays, .fx-core { display: none; }
+  .fx-flash { animation: lightBloomSoft .9s ease both !important; transform: none; }
+  @keyframes lightBloomSoft { 0% { opacity: 0; } 40% { opacity: .95; } 100% { opacity: 0; } }
+  ::view-transition-old(root), ::view-transition-old(topbar), ::view-transition-old(site-header) { animation: fadeOutSoft .4s ease both !important; }
+  ::view-transition-new(root), ::view-transition-new(topbar), ::view-transition-new(site-header) { animation: fadeInSoft .5s .36s ease both !important; }
+  @keyframes fadeOutSoft { to { opacity: 0; } }
+  @keyframes fadeInSoft { from { opacity: 0; } to { opacity: 1; } }
+  .page-leave { animation: fadeOutSoft .35s ease both; }
+  .page-enter { animation: fadeInSoft .5s ease both; }
+}
